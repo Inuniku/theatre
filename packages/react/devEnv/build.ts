@@ -36,7 +36,7 @@ function createBundles(watch: boolean) {
     mainFields: ['browser', 'module', 'main'],
     target: ['firefox57', 'chrome58'],
     conditions: ['browser', 'node'],
-    plugins: [externalPlugin([/^[\@a-zA-Z]+/])],
+    plugins: [externalPlugin([])],
   }
 
   build({

@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["jest", "node"],
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    "baseUrl": ".",
+    "paths": {
+      "@theatre/core": ["../../theatre/core/src/index.ts"],
+      "@theatre/studio": ["../../theatre/studio/src/index.ts"],
+      "@theatre/studio/*": ["../../theatre/studio/src/*"],
+      "@theatre/core/*": ["../../theatre/core/src/*"],
+      "@theatre/shared/*": ["../../theatre/shared/src/*"],
+      "@theatre/dataverse": ["../../packages/dataverse/src/index.ts"]
+      /*  "@theatre/react": ["./packages/react/src/index.ts"],
+      "@theatre/r3f": ["./packages/r3f/src/index.ts"],
+      "@theatre/r3f/dist/extension": ["./packages/r3f/src/extension/index.ts"],
+      "theatric": ["./packages/theatric/src/index.ts"] */
+    }
+  },
+  "include": [
+    "src",
+    "../../theatre/core/src",
+    "../../theatre/studio/src",
+    "../../theatre/shared/src",
+    "../../packages/react",
+    "../../theatre/globals.d.ts"
+  ],
+  "exclude": [
+    "*/**/dist",
+    "../../**/*.test.ts",
+    "../../**/*.typeTest.ts",
+    "../../**/*.test-helpers.ts",
+    "node_modules"
+  ],
+  "references": [{"path": "./tsconfig.node.json"}]
+}
