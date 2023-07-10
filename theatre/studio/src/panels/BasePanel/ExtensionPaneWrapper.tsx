@@ -8,7 +8,7 @@ import BasePanel from './BasePanel'
 import PanelDragZone from './PanelDragZone'
 import PanelWrapper from './PanelWrapper'
 import {ErrorBoundary} from 'react-error-boundary'
-import {IoClose} from 'react-icons/all'
+import {IoIosClose} from 'react-icons/io'
 import getStudio from '@theatre/studio/getStudio'
 import {panelZIndexes} from '@theatre/studio/panels/BasePanel/common'
 import type {PaneInstanceId, UIPanelId} from '@theatre/shared/utils/ids'
@@ -161,7 +161,7 @@ const Content: React.FC<{paneInstance: PaneInstance<$FixMe>}> = ({
         <TitleBar>
           <PaneTools>
             <ClosePanelButton onClick={closePane} title={'Close Pane'}>
-              <IoClose />
+              <IoIosClose />
             </ClosePanelButton>
           </PaneTools>
           <Title>{paneInstance.instanceId}</Title>

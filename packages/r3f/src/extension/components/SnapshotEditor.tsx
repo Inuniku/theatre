@@ -190,7 +190,7 @@ const SnapshotEditor: React.FC<{paneId: string}> = (props) => {
 
   return (
     <root.div style={{overflow: 'hidden'}}>
-      <StyleSheetManager disableVendorPrefixes>
+      <StyleSheetManager>
         <>
           <GlobalStyle />
           <Wrapper>

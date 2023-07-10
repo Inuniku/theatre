@@ -27,7 +27,7 @@ import type {IDetailSimplePropEditorProps} from './DetailSimplePropEditor'
 import {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
 import {usePrism} from '@theatre/react'
 import {val} from '@theatre/dataverse'
-import {HiOutlineChevronRight} from 'react-icons/all'
+import {HiOutlineChevronRight} from 'react-icons/hi'
 import memoizeFn from '@theatre/shared/utils/memoizeFn'
 
 const Container = styled.div`
@@ -81,7 +81,9 @@ const CollapseIcon = styled.span<{isCollapsed: boolean; isVector: boolean}>`
   align-items: center;
   justify-content: center;
 
-  transition: transform 0.05s ease-out, color 0.1s ease-out;
+  transition:
+    transform 0.05s ease-out,
+    color 0.1s ease-out;
   transform: rotateZ(${(props) => (props.isCollapsed ? 0 : 90)}deg);
   color: #66686a;
 

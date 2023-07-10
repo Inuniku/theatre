@@ -81,11 +81,41 @@ export const PortalLayer = styled.div`
   pointer-events: none;
 `
 
+const propNames = [
+  'isOn',
+  'isHighlighted',
+  'isVectorProp',
+  'isSelectable',
+  'posType',
+  'isSelected',
+  'isEven',
+  'isInlineEditorPopoverOpen',
+  'isPopoverOpen',
+  'graphEditorColor',
+  'isShiftDown',
+  'active',
+  'isVisible',
+  'pin',
+  'pinned',
+  'available',
+  'isCollapsed',
+  'isVector',
+]
+
+const isPropValid = (propName: string) => !propNames.includes(propName)
+
 export const ProvideStyles: React.FC<{target: undefined | HTMLElement}> = (
   props,
 ) => {
   return (
-    <StyleSheetManager disableVendorPrefixes target={props.target}>
+    <StyleSheetManager
+      target={props.target}
+      shouldForwardProp={(propName, elementToBeRendered) => {
+        return typeof elementToBeRendered === 'string'
+          ? isPropValid(propName)
+          : true
+      }}
+    >
       <>
         <GlobalStyle />
         {props.children}

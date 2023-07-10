@@ -14,11 +14,11 @@
     "_declarations:emit": "tsc --build ./tsconfig.json"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.23",
-    "@types/lodash-es": "^4.17.4",
-    "@types/node": "^15.6.2",
-    "@types/react": "^17.0.9",
-    "typescript": "^4.4.2"
+    "@types/jest": "^29.5.2",
+    "@types/lodash-es": "^4.17.7",
+    "@types/node": "^20.4.1",
+    "@types/react": "^18.2.14",
+    "typescript": "^5.1.6"
   },
   "dependencies": {
     "lodash-es": "^4.17.21"

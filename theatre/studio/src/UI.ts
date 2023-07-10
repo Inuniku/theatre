@@ -1,7 +1,7 @@
 import UIRoot from '@theatre/studio/UIRoot/UIRoot'
 import type {$IntentionalAny} from '@theatre/shared/utils/types'
 import React from 'react'
-import ReactDOM from 'react-dom'
+import {createRoot} from 'react-dom/client'
 import type {Studio} from './Studio'
 import {val} from '@theatre/dataverse'
 import {getMounter} from './utils/renderInPortalInContext'
@@ -66,7 +66,8 @@ export default class UI {
       this._renderTimeout = undefined
       this._documentBodyUIIsRenderedIn = document.body
       this._documentBodyUIIsRenderedIn.appendChild(this.containerEl)
-      ReactDOM.render(React.createElement(UIRoot), this.containerShadow)
+      const root = createRoot(this.containerShadow)
+      root.render(React.createElement(UIRoot))
     }
     this._renderTimeout = setTimeout(renderCallback, 10)
   }

@@ -7,7 +7,7 @@ import type {
 } from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
 import type {VoidFn} from '@theatre/shared/utils/types'
 import React, {useRef} from 'react'
-import {HiOutlineChevronRight} from 'react-icons/all'
+import {HiOutlineChevronRight} from 'react-icons/hi'
 import styled from 'styled-components'
 import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
@@ -59,7 +59,9 @@ const LeftRowHead_Icon = styled.span<{isCollapsed: boolean}>`
   display: flex;
   align-items: center;
 
-  transition: transform 0.05s ease-out, color 0.1s ease-out;
+  transition:
+    transform 0.05s ease-out,
+    color 0.1s ease-out;
   transform: rotateZ(${(props) => (props.isCollapsed ? 0 : 90)}deg);
   color: #66686a;
 
