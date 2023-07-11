@@ -62,7 +62,7 @@ const FullSecondStampsContainer = styled.div`
   pointer-events: none;
 `
 
-const StampsGrid: React.FC<{
+const StampsGrid: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   width: number
   height: number

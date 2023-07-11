@@ -45,7 +45,7 @@ const Container = styled.div<{pin: boolean}>`
   }
 `
 
-const OutlinePanel: React.FC<{}> = () => {
+const OutlinePanel: React.FCWithChildren<{}> = () => {
   const pin = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
   const show = useVal(shouldShowOutlineD)
   const active = useHotspot('left')

@@ -19,7 +19,7 @@ const Container = styled.div`
   pointer-events: none;
 `
 
-const DopeSheetBackground: React.FC<{
+const DopeSheetBackground: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const width = useVal(layoutP.rightDims.width)

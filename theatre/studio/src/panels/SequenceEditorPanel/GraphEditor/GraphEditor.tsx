@@ -38,7 +38,7 @@ const SVGContainer = styled.svg`
   pointer-events: none;
 `
 
-const GraphEditor: React.FC<{
+const GraphEditor: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   return usePrism(() => {

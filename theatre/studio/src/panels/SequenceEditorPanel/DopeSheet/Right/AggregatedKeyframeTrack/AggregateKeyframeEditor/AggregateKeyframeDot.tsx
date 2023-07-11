@@ -134,7 +134,7 @@ export function AggregateKeyframeDot(
         // Need this for the dragging logic to be able to get the keyframe props
         // based on the position.
         {...DopeSnap.includePositionSnapAttrs(cur.position)}
-        onClick={(e) =>
+        onClick={(e: React.MouseEvent) =>
           props.editorProps.viewModel.type !== 'sheet'
             ? inlineEditorPopover.open(e, ref.current!)
             : null

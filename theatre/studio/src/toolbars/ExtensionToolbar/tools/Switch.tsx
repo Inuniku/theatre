@@ -13,7 +13,7 @@ const IconContainer = styled.div`
   }
 `
 
-const Switch: React.FC<{
+const Switch: React.FCWithChildren<{
   config: ToolConfigSwitch
 }> = ({config}) => {
   return (

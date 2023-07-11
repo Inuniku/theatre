@@ -25,7 +25,7 @@ const Label = styled.div`
 
 const nudge: BasicNumberInputNudgeFn = ({deltaX}) => deltaX * 0.25
 
-const MarkerEditorPopover: React.FC<{
+const MarkerEditorPopover: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   marker: StudioHistoricStateSequenceEditorMarker
   /**

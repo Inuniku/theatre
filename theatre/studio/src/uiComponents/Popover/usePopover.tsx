@@ -152,7 +152,7 @@ export default function usePopover(
     createPortal(
       <PopoverAutoCloseLock.Provider value={lock.childPopoverLock}>
         <TooltipWrapper
-          children={render}
+          content={render}
           target={state.target}
           onClickOutside={state.onClickOutside}
           onPointerOutside={state.onPointerOutside}

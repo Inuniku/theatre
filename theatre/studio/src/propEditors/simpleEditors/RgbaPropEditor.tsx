@@ -103,7 +103,7 @@ function RgbaPropEditor({
         <ColorPreviewPuck
           rgbaColor={value}
           ref={containerRef}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             popover.toggle(e, containerRef.current)
           }}
         />
@@ -112,7 +112,7 @@ function RgbaPropEditor({
           temporarilySetValue={noop}
           discardTemporaryValue={noop}
           permanentlySetValue={onChange}
-          isValid={(v) => !!v.match(validHexRegExp)}
+          isValid={(v: string) => !!v.match(validHexRegExp)}
           autoFocus={autoFocus}
         />
       </RowContainer>

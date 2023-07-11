@@ -6,7 +6,7 @@ const Container = styled.div<{room: number}>`
   inset: ${(props) => props.room * -1}px;
 `
 
-const RoomToClick: React.FC<{room: number}> = (props) => {
+const RoomToClick: React.FCWithChildren<{room: number}> = (props) => {
   return <Container room={props.room} />
 }
 

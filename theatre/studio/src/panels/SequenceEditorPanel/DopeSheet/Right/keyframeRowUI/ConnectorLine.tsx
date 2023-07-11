@@ -83,7 +83,7 @@ export const ConnectorLine = React.forwardRef<
           props.connectorLengthInUnitSpace / CONNECTOR_WIDTH_UNSCALED
         }))`,
       }}
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent) => {
         props.openPopover?.(e)
       }}
     >

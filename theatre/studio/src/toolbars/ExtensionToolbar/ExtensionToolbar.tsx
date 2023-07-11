@@ -25,7 +25,7 @@ const GroupDivider = styled.div`
   opacity: 0.4;
 `
 
-const ExtensionToolsetRender: React.FC<{
+const ExtensionToolsetRender: React.FCWithChildren<{
   extension: IExtension
   toolbarId: string
 }> = ({extension, toolbarId}) => {
@@ -45,7 +45,7 @@ const ExtensionToolsetRender: React.FC<{
   return <Toolset config={config} />
 }
 
-export const ExtensionToolbar: React.FC<{
+export const ExtensionToolbar: React.FCWithChildren<{
   toolbarId: string
   showLeftDivider?: boolean
 }> = ({toolbarId, showLeftDivider}) => {

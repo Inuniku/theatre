@@ -26,7 +26,7 @@ const Label = styled.div`
 
 const nudge: BasicNumberInputNudgeFn = ({deltaX}) => deltaX * 0.25
 
-const LengthEditorPopover: React.FC<{
+const LengthEditorPopover: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   /**
    * Called when user hits enter/escape

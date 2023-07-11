@@ -41,7 +41,7 @@ const getRatio = (ctx: CanvasRenderingContext2D) => {
   return getDevicePixelRatio() / getBackingStoreRatio(ctx)
 }
 
-const FrameGrid: React.FC<{
+const FrameGrid: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   width: number
   height: number

@@ -46,7 +46,7 @@ type Lock = {className: string; cursor?: string}
 
 const context = createContext<Context>({} as $IntentionalAny)
 
-const PointerEventsHandler: React.FC<{
+const PointerEventsHandler: React.FCWithChildren<{
   className?: string
 }> = (props) => {
   const [locks, setLocks] = useState<Lock[]>([])

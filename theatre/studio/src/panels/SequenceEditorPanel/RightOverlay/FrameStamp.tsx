@@ -43,7 +43,7 @@ const Line = styled.div<{posType: FrameStampPositionType}>`
   pointer-events: none;
 `
 
-const FrameStamp: React.FC<{
+const FrameStamp: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = React.memo(({layoutP}) => {
   const [posInUnitSpace, posType] = useVal(useFrameStampPositionD())

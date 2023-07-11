@@ -47,7 +47,7 @@ const Container = styled.button`
   }
 `
 
-const GraphEditorToggle: React.FC<{
+const GraphEditorToggle: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const isOpen = useVal(layoutP.graphEditorDims.isOpen)

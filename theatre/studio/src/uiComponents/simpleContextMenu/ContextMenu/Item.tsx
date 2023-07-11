@@ -1,5 +1,4 @@
 import noop from '@theatre/shared/utils/noop'
-import type {ElementType} from 'react'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -35,8 +34,8 @@ const ItemContainer = styled.li<{enabled: boolean}>`
 
 const ItemLabel = styled.span``
 
-const Item: React.FC<{
-  label: string | ElementType
+const Item: React.FCWithChildren<{
+  label: React.ReactNode
   onClick: (e: React.MouseEvent) => void
   enabled: boolean
 }> = (props) => {

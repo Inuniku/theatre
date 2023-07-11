@@ -202,7 +202,7 @@ const GlobalToolbar: React.FC = () => {
         {moreMenu.node}
         <ToolbarIconButton
           ref={moreMenuTriggerRef}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             moreMenu.toggle(e, moreMenuTriggerRef.current!)
           }}
         >

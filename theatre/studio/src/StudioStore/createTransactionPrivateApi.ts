@@ -18,6 +18,13 @@ import {isPlainObject} from 'lodash-es'
 import userReadableTypeOfValue from '@theatre/shared/utils/userReadableTypeOfValue'
 
 /**
+ * Same as lodash-es, but with type predicate
+ */
+function isPlainObjectTS(value: $IntentionalAny): value is object {
+  return isPlainObject(value)
+}
+
+/**
  * Deep-clones a plain JS object or a `string | number | boolean`. In case of a plain
  * object, all its sub-props that aren't `string | number | boolean` get pruned. Also,
  * all empty objects (i.e. `{}`) get pruned.
@@ -32,7 +39,7 @@ function cloneDeepSerializableAndPrune<T>(v: T): T | undefined {
     typeof v === 'number'
   ) {
     return v
-  } else if (isPlainObject(v)) {
+  } else if (isPlainObjectTS(v)) {
     const cloned: $IntentionalAny = {}
     let clonedAtLeastOneProp = false
     for (const [key, val] of Object.entries(v)) {
@@ -169,7 +176,7 @@ export default function createTransactionPrivateApi(
               const pathToPropInProvidedValue =
                 pathToProp.slice(lengthOfTopPointer)
 
-              const v = getDeep(_value, pathToPropInProvidedValue)
+              const v = getDeep(_value as $FixMe, pathToPropInProvidedValue)
               if (typeof v !== 'undefined') {
                 setStaticOrKeyframeProp(v, primitivePropConfig, pathToProp)
               } else {

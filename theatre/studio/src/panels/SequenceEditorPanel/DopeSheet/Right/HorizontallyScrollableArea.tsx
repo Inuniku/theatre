@@ -31,7 +31,7 @@ const Container = styled.div`
   }
 `
 
-const HorizontallyScrollableArea: React.FC<{
+const HorizontallyScrollableArea: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   height: number
 }> = React.memo(({layoutP, children, height}) => {

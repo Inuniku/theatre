@@ -14,7 +14,7 @@ type UIOptionGridOptions<Item> = {
   items: Item[]
   /** display of items */
   renderItem: (value: {
-    select(e?: Event): void
+    select(e: React.MouseEvent): void
     /** data item */
     item: Item
     /** arrow key nav */

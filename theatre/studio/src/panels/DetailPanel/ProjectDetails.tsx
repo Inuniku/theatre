@@ -49,7 +49,7 @@ function saveFile(content: string | Blob, fileName: string) {
   }, 40000)
 }
 
-const ProjectDetails: React.FC<{
+const ProjectDetails: React.FCWithChildren<{
   projects: Project[]
 }> = ({projects}) => {
   const project = projects[0]
@@ -133,6 +133,7 @@ const ProjectDetails: React.FC<{
         <a
           href="https://www.theatrejs.com/docs/latest/manual/projects#state"
           target="_blank"
+          rel="noopener"
         >
           Here is a quick guide on how to export to production.
         </a>
@@ -147,7 +148,7 @@ const ProjectDetails: React.FC<{
         <StateConflictRow projectId={projectId} />
         <TheExportRow>
           <DetailPanelButton
-            onMouseEnter={(e) =>
+            onMouseEnter={(e: React.MouseEvent) =>
               exportTooltip.open(e, e.target as unknown as HTMLButtonElement)
             }
             onClick={!downloaded ? exportProject : undefined}

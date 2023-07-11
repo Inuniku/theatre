@@ -83,7 +83,7 @@ const PrimitivePropRowHead_Label = styled.span`
   }
 `
 
-const PrimitivePropRow: React.FC<{
+const PrimitivePropRow: React.FCWithChildren<{
   leaf: SequenceEditorTree_PrimitiveProp
 }> = ({leaf}) => {
   const pointerToProp = pointerDeep(

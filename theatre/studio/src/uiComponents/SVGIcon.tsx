@@ -18,7 +18,7 @@ const Container = styled.div<{sizing: Sizing}>`
 
 type Sizing = 'em' | 'fill' | 'none' | 'absoluteFill'
 
-const SvgIcon: React.FC<{
+const SvgIcon: React.FCWithChildren<{
   src: string
   sizing?: Sizing
 }> = (props) => {

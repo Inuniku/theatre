@@ -36,7 +36,7 @@ const ActionButton = styled.button`
   }
 `
 
-const ObjectDetails: React.FC<{
+const ObjectDetails: React.FCWithChildren<{
   /** TODO: add support for multiple objects (it would show their common props) */
   objects: [SheetObject]
 }> = ({objects}) => {

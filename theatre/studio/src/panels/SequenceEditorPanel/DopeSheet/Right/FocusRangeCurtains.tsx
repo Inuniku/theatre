@@ -20,7 +20,7 @@ const Curtain = styled.div<{enabled: boolean}>`
   background-color: ${(props) => (props.enabled ? '#000000' : 'transparent')};
 `
 
-const FocusRangeCurtains: React.FC<{
+const FocusRangeCurtains: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const existingRangeD = useMemo(

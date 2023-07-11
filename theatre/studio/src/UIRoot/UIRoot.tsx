@@ -114,6 +114,6 @@ export default function UIRoot() {
   return inside
 }
 
-const MountExtensionComponents: React.FC<{}> = () => {
+const MountExtensionComponents: React.FCWithChildren<{}> = () => {
   return <MountAll />
 }

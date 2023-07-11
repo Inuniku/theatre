@@ -19,7 +19,7 @@ type IProps = {
   isSelected: boolean
 }
 
-const SVGCurveSegment: React.FC<IProps> = (props) => {
+const SVGCurveSegment: React.FCWithChildren<IProps> = (props) => {
   const {easing, isSelected} = props
   const curveColor = isSelected ? SELECTED_CURVE_COLOR : CURVE_COLOR
   // With a padding of 0, this results in a "unit viewbox" i.e. `0 0 1 1`.

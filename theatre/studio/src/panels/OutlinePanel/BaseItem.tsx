@@ -132,7 +132,7 @@ type SelectionStatus =
   | 'selected'
   | 'descendant-is-selected'
 
-const BaseItem: React.FC<{
+const BaseItem: React.FCWithChildren<{
   label: React.ReactNode
   select?: VoidFn
   depth: number
@@ -164,9 +164,9 @@ const BaseItem: React.FC<{
         <Head_IconContainer>
           {canContainChildren ? (
             <Head_Icon_WithDescendants
-              onClick={(evt) => {
-                evt.stopPropagation()
-                evt.preventDefault()
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                e.preventDefault()
                 setIsCollapsed?.(!collapsed)
               }}
             >

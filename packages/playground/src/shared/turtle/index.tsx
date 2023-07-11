@@ -13,7 +13,7 @@ const project = getProject('Turtle Playground')
 
 const sheet = project.sheet('Turtle', 'The only one')
 
-const TurtleExample: React.FC<{}> = (props) => {
+const TurtleExample: React.FCWithChildren<{}> = (props) => {
   const [container, setContainer] = useState<HTMLDivElement | null>(null)
   const programFn = useMemo(() => {
     return ({forward, backward, left, right, repeat}: ITurtle) => {

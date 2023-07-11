@@ -73,7 +73,7 @@ type State = {
   }
 }
 
-const Box: React.FC<{
+const Box: React.FCWithChildren<{
   id: string
   sheet: ISheet
   selection: IStudio['selection']
@@ -172,7 +172,7 @@ const Box: React.FC<{
 
 let lastBoxId = 1
 
-export const Scene: React.FC<{project: IProject}> = ({project}) => {
+export const Scene: React.FCWithChildren<{project: IProject}> = ({project}) => {
   const [boxes, setBoxes] = useState<Array<string>>(['0', '1'])
 
   // This is cheap to call and always returns the same value, so no need for useMemo()

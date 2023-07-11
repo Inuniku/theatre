@@ -139,7 +139,7 @@ const OuterColoredMargin = styled.div<{
     props.type === 'start' ? -12 : focusRangeStripTheme.thumbWidth}px;
 `
 
-const FocusRangeThumb: React.FC<{
+const FocusRangeThumb: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   thumbType: keyof IRange
 }> = ({layoutP, thumbType}) => {

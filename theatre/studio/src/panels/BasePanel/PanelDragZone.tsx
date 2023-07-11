@@ -14,7 +14,7 @@ const Container = styled.div`
   cursor: move;
 `
 
-const PanelDragZone: React.FC<
+const PanelDragZone: React.FCWithChildren<
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 > = (props) => {
   const panelStuff = usePanel()
@@ -35,7 +35,7 @@ const PanelDragZone: React.FC<
 
         return {
           onDrag(dx, dy) {
-            const newDims: typeof panelStuff['dims'] = {
+            const newDims: (typeof panelStuff)['dims'] = {
               ...stuffBeforeDrag.dims,
               top: clamp(
                 stuffBeforeDrag.dims.top + dy,

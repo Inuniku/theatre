@@ -13,7 +13,7 @@ const Container = styled(ToolbarIconButton)`
   }
 `
 
-const IconButton: React.FC<{
+const IconButton: React.FCWithChildren<{
   config: ToolConfigIcon
 }> = ({config}) => {
   return (

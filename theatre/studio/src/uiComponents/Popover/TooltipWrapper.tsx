@@ -21,7 +21,7 @@ export type AbsolutePlacementBoxConstraints = {
 const TooltipWrapper: React.FC<{
   target: HTMLElement | SVGElement | Element
   onClickOutside?: (e: MouseEvent) => void
-  children: () => React.ReactElement
+  content: () => React.ReactElement
   onPointerOutside?: {
     threshold: number
     callback: (e: MouseEvent) => void
@@ -30,7 +30,7 @@ const TooltipWrapper: React.FC<{
   verticalGap?: number // Has no effect if verticalPlacement === 'overlay'
   constraints?: AbsolutePlacementBoxConstraints
 }> = (props) => {
-  const originalElement = props.children()
+  const originalElement = props.content()
   const [ref, container] = useRefAndState<HTMLElement | SVGElement | null>(null)
   const style: Record<string, string> = originalElement.props.style
     ? {...originalElement.props.style}

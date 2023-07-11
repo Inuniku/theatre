@@ -19,7 +19,7 @@ const ConflictNotice = styled.div`
   box-shadow: 0 2px 8px -4px black;
 `
 
-const ProjectListItem: React.FC<{
+const ProjectListItem: React.FCWithChildren<{
   depth: number
   project: Project
 }> = ({depth, project}) => {

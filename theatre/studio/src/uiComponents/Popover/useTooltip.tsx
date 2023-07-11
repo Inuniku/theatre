@@ -54,7 +54,7 @@ export default function useTooltip<T extends HTMLElement>(
     enabled && isOpen && targetNode ? (
       createPortal(
         <TooltipWrapper
-          children={render}
+          content={render}
           target={targetNode}
           onClickOutside={noop}
           verticalPlacement={opts.verticalPlacement}

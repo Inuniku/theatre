@@ -10,7 +10,7 @@ import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEdi
 import BasicKeyframedTrack from './BasicKeyframedTrack/BasicKeyframedTrack'
 import type {graphEditorColors} from './GraphEditor'
 
-const PrimitivePropGraph: React.FC<{
+const PrimitivePropGraph: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   sheetObject: SheetObject
   pathToProp: PathToProp

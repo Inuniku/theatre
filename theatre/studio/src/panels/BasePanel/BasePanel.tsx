@@ -64,7 +64,7 @@ const PanelContext = React.createContext<PanelStuff>(null as $IntentionalAny)
 
 export const usePanel = () => useContext(PanelContext)
 
-const BasePanel: React.FC<{
+const BasePanel: React.FCWithChildren<{
   panelId: UIPanelId
   defaultPosition: PanelPosition
   minDims: {width: number; height: number}

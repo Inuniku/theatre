@@ -4,7 +4,7 @@ import {val} from '@theatre/dataverse'
 import React from 'react'
 import {createPortal} from 'react-dom'
 
-const ShowMousePosition: React.FC<{}> = (props) => {
+const ShowMousePosition: React.FCWithChildren<{}> = (props) => {
   const pos = usePrism(
     () => val(mousePositionD) ?? {clientX: 0, clientY: 0},
     [],

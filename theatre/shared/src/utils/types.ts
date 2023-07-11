@@ -2,7 +2,7 @@ import type {Asset} from './assets'
 
 export type GenericAction = {type: string; payload: unknown}
 
-export type ReduxReducer<State extends {}> = (
+export type ReduxReducer<State> = (
   s: undefined | State,
   action: unknown,
 ) => State

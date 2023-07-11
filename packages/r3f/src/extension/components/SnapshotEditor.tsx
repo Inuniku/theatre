@@ -37,10 +37,10 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-const EditorScene: React.FC<{snapshotEditorSheet: ISheet; paneId: string}> = ({
-  snapshotEditorSheet,
-  paneId,
-}) => {
+const EditorScene: React.FCWithChildren<{
+  snapshotEditorSheet: ISheet
+  paneId: string
+}> = ({snapshotEditorSheet, paneId}) => {
   const [gl, scene, camera] = useThree(
     (store) => [store.gl, store.scene, store.camera] as const,
     shallow,
@@ -144,7 +144,7 @@ const WaitForSceneInitMessage = styled.div<{active?: boolean}>`
   }
 `
 
-const SnapshotEditor: React.FC<{paneId: string}> = (props) => {
+const SnapshotEditor: React.FCWithChildren<{paneId: string}> = (props) => {
   const snapshotEditorSheet = getEditorSheet()
   const paneId = props.paneId
   const editorObject = getEditorSheetObject()

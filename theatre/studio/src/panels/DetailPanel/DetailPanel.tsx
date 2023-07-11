@@ -37,7 +37,9 @@ const Container = styled.div<{pin: boolean}>`
   height: fit-content;
   z-index: ${panelZIndexes.propsPanel};
 
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   border-radius: 2px;
 
@@ -90,7 +92,7 @@ export const contextMenuShownContext = createContext<
   ReturnType<typeof useLockSet>
 >([false, () => () => {}])
 
-const DetailPanel: React.FC<{}> = (props) => {
+const DetailPanel: React.FCWithChildren<{}> = (props) => {
   const pin = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
 
   const hotspotActive = useHotspot('right')

@@ -27,9 +27,9 @@ const Container = styled.div`
   ${pointerEventsAutoInNormalMode};
 `
 
-const TopStrip: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
-  layoutP,
-}) => {
+const TopStrip: React.FCWithChildren<{
+  layoutP: Pointer<SequenceEditorPanelLayout>
+}> = ({layoutP}) => {
   const width = useVal(layoutP.rightDims.width)
 
   return (

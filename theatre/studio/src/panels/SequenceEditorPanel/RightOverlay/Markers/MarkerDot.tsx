@@ -190,7 +190,7 @@ const MarkerDotVisible: React.VFC<IMarkerDotVisibleProps> = ({
       <HitZone
         title={marker.label ? `Marker: ${marker.label}` : 'Marker'}
         ref={markRef}
-        onClick={(e) => {
+        onClick={(e: React.MouseEvent) => {
           togglePopover(e, markRef.current!)
         }}
         {...DopeSnapHitZoneUI.reactProps({

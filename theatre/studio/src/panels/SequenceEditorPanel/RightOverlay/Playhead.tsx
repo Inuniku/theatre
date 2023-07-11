@@ -188,9 +188,9 @@ const Tooltip = styled.div`
   }
 `
 
-const Playhead: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
-  layoutP,
-}) => {
+const Playhead: React.FCWithChildren<{
+  layoutP: Pointer<SequenceEditorPanelLayout>
+}> = ({layoutP}) => {
   const [thumbRef, thumbNode] = useRefAndState<HTMLElement | null>(null)
 
   const {

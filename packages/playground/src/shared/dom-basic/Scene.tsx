@@ -15,7 +15,7 @@ const SceneCSS: CSSProperties = {
   bottom: '0',
 }
 
-export const Scene: React.FC<{project: IProject}> = ({project}) => {
+export const Scene: React.FCWithChildren<{project: IProject}> = ({project}) => {
   const containerRef = useRef<HTMLDivElement>(null!)
   const sheet = project.sheet('DOM')
 

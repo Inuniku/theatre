@@ -38,7 +38,9 @@ const ChooseStateRow = styled.div`
   gap: 8px;
 `
 
-const StateConflictRow: React.FC<{projectId: ProjectId}> = ({projectId}) => {
+const StateConflictRow: React.FCWithChildren<{projectId: ProjectId}> = ({
+  projectId,
+}) => {
   const loadingState = useVal(
     getStudio().atomP.ephemeral.coreByProject[projectId].loadingState,
   )
@@ -52,7 +54,7 @@ const StateConflictRow: React.FC<{projectId: ProjectId}> = ({projectId}) => {
   }
 }
 
-const InConflict: React.FC<{
+const InConflict: React.FCWithChildren<{
   projectId: ProjectId
   loadingState: Extract<
     ProjectEphemeralState['loadingState'],
@@ -109,6 +111,7 @@ const InConflict: React.FC<{
         <a
           href="https://www.theatrejs.com/docs/latest/manual/projects#state"
           target="_blank"
+          rel="noopener"
         >
           Learn more.
         </a>

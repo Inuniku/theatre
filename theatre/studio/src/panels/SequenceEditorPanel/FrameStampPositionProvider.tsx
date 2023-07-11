@@ -46,7 +46,7 @@ let lastLockId = 0
  * One example of a stamp includes the "Keyframe Dot" which show a `⌜⌞⌝⌟` kinda UI
  * around the dot when dragged over.
  */
-const FrameStampPositionProvider: React.FC<{
+const FrameStampPositionProvider: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({children, layoutP}) => {
   const locksAtom = useMemo(() => new Atom<LockItem[]>([]), [])

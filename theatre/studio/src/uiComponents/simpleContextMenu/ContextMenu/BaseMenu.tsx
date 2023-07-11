@@ -1,4 +1,3 @@
-import type {ElementType} from 'react'
 import React from 'react'
 import Item from './Item'
 import type {$FixMe} from '@theatre/shared/utils/types'
@@ -35,13 +34,13 @@ const MenuTitle = styled.div`
 `
 
 type MenuItem = {
-  label: string | ElementType
+  label: React.ReactNode
   callback?: (e: React.MouseEvent) => void
   enabled?: boolean
   // subs?: Item[]
 }
 
-const BaseMenu: React.FC<{
+const BaseMenu: React.FCWithChildren<{
   items: MenuItem[]
   ref?: $FixMe
   displayName?: string

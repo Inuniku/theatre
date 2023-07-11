@@ -43,9 +43,9 @@ const FilledIcon = styled.div`
   border-radius: 1px;
 `
 
-const DefaultOrStaticValueIndicator: React.FC<{hasStaticOverride: boolean}> = (
-  props,
-) => {
+const DefaultOrStaticValueIndicator: React.FCWithChildren<{
+  hasStaticOverride: boolean
+}> = (props) => {
   return (
     <Container hasStaticOverride={props.hasStaticOverride}>
       {props.hasStaticOverride ? (

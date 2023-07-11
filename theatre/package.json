@@ -32,7 +32,7 @@
     "@theatre/dataverse": "workspace:*",
     "@theatre/react": "workspace:*",
     "@types/fs-extra": "^11.0.1",
-    "@types/jest": "^29.5.2",
+    "@types/jest": "^29.5.3",
     "@types/lodash": "^4.14.195",
     "@types/lodash-es": "^4.17.7",
     "@types/marked": "^5.0.0",

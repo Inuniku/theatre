@@ -1,5 +1,4 @@
 import useBoundingClientRect from '@theatre/studio/uiComponents/useBoundingClientRect'
-import type {ElementType} from 'react'
 import {useMemo} from 'react'
 import {useContext} from 'react'
 import React, {useLayoutEffect, useState} from 'react'
@@ -15,12 +14,8 @@ import BaseMenu from './BaseMenu'
  */
 const pointerDistanceThreshold = 20
 
-export type IContextMenuItemCustomNodeRenderFn = (controls: {
-  closeMenu(): void
-}) => React.ReactChild
-
 export type IContextMenuItem = {
-  label: string | ElementType
+  label: React.ReactNode
   callback?: (e: React.MouseEvent) => void
   enabled?: boolean
   // subs?: Item[]
@@ -44,7 +39,7 @@ export type ContextMenuProps = {
  * TODO let's make sure that triggering a context menu would close
  * the other open context menu (if one _is_ open).
  */
-const ContextMenu: React.FC<ContextMenuProps> = (props) => {
+const ContextMenu: React.FCWithChildren<ContextMenuProps> = (props) => {
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const rect = useBoundingClientRect(container)
   const windowSize = useWindowSize()

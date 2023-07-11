@@ -21,9 +21,9 @@
       "@theatre/studio/*": ["../../theatre/studio/src/*"],
       "@theatre/core/*": ["../../theatre/core/src/*"],
       "@theatre/shared/*": ["../../theatre/shared/src/*"],
-      "@theatre/dataverse": ["../../packages/dataverse/src/index.ts"]
-      /*  "@theatre/react": ["./packages/react/src/index.ts"],
-      "@theatre/r3f": ["./packages/r3f/src/index.ts"],
+      "@theatre/dataverse": ["../../packages/dataverse/src/index.ts"],
+      "@theatre/react": ["../../packages/react/src/index.ts"]
+      /* "@theatre/r3f": ["./packages/r3f/src/index.ts"],
       "@theatre/r3f/dist/extension": ["./packages/r3f/src/extension/index.ts"],
       "theatric": ["./packages/theatric/src/index.ts"] */
     }

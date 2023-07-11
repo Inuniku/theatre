@@ -166,10 +166,10 @@ const Content: React.VFC<{}> = () => {
 
     return (
       <Container
-        ref={(elt) => {
-          containerRef(elt as HTMLDivElement)
+        ref={(elt: HTMLDivElement) => {
+          containerRef(elt)
           if (elt !== containerNode) {
-            setContainerNode(elt as HTMLDivElement)
+            setContainerNode(elt)
           }
         }}
       >
@@ -188,9 +188,9 @@ const Content: React.VFC<{}> = () => {
   }, [dims, containerNode])
 }
 
-const Header: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
-  layoutP,
-}) => {
+const Header: React.FCWithChildren<{
+  layoutP: Pointer<SequenceEditorPanelLayout>
+}> = ({layoutP}) => {
   return usePrism(() => {
     const sheet = val(layoutP.sheet)
     return (

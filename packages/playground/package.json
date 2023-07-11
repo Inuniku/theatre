@@ -25,7 +25,7 @@
     "@theatre/core": "workspace:*",
     "@theatre/r3f": "workspace:*",
     "@theatre/studio": "workspace:*",
-    "@types/jest": "^29.5.2",
+    "@types/jest": "^29.5.3",
     "@types/lodash-es": "^4.17.7",
     "@types/node": "^20.4.1",
     "@types/react": "^18.2.14",

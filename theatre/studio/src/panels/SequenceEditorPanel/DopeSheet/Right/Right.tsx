@@ -19,7 +19,7 @@ const ListContainer = styled.ul`
   width: ${contentWidth}px;
 `
 
-const Right: React.FC<{
+const Right: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   return usePrism(() => {

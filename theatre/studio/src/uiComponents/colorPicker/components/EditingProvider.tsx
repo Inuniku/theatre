@@ -1,5 +1,4 @@
-import type {FC} from 'react'
-import React, {createContext, useContext, useState} from 'react'
+import {createContext, useContext, useState} from 'react'
 
 const editingContext = createContext<{
   editing: boolean
@@ -11,7 +10,7 @@ const editingContext = createContext<{
  * stateful and disregard controlling props, while not editing, it should behave
  * in a controlled manner.
  */
-export const EditingProvider: FC = ({children}) => {
+export const EditingProvider: React.FCWithChildren = ({children}) => {
   const [editing, setEditing] = useState(false)
 
   return (

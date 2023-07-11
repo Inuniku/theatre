@@ -14,7 +14,7 @@
     "@theatre/r3f": "workspace:*",
     "react-scripts": "^5.0.1",
     "three": "^0.154.0",
-    "web-vitals": "^3.3.2"
+    "web-vitals": "^3.4.0"
   },
   "devDependencies": {
     "@theatre/studio": "workspace:*"

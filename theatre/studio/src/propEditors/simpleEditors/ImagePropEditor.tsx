@@ -114,8 +114,11 @@ function ImagePropEditor({
   }, [value])
 
   const onChange = useCallback(
-    async (event) => {
-      const file = event.target.files[0]
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const target = event.target
+      const file = event.target?.files?.[0]
+      if (!file || !event.target) throw new Error('Invalid Operation')
+
       editingTools.permanentlySetValue({type: 'image', id: undefined})
       const imageId = await editingTools.createAsset(file)
 
@@ -127,7 +130,8 @@ function ImagePropEditor({
           id: imageId,
         })
       }
-      event.target.value = null
+      // TODO: why set null?
+      event.target.value = ''
     },
     [editingTools, value],
   )

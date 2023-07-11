@@ -1,7 +1,7 @@
 import React from 'react'
 import PanelResizeHandle from './PanelResizeHandle'
 
-const PanelResizers: React.FC<{}> = (props) => {
+const PanelResizers: React.FCWithChildren<{}> = (props) => {
   return (
     <>
       <PanelResizeHandle which="Bottom" />

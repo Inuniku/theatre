@@ -237,7 +237,7 @@ class PrismInstance<V> implements Prism<V> {
       // use an empty object as the initial value so that the listener is called on the first tick.
       // if we were to use, say, undefined, and this.getValue() also returned undefined, the listener
       // would never be called.
-      emptyObject
+      emptyObject as V
 
     // this function will be _scheduled_ to be called on the currently running, or next tick,
     // after the prism has gone from fresh to stale.

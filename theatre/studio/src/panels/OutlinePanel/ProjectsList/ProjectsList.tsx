@@ -12,7 +12,7 @@ const Container = styled.ul`
   padding-right: 4px;
 `
 
-const ProjectsList: React.FC<{}> = (props) => {
+const ProjectsList: React.FCWithChildren<{}> = (props) => {
   return usePrism(() => {
     const projects = val(getStudio().projectsP)
 

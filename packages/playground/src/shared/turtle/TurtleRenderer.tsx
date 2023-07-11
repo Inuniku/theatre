@@ -23,7 +23,7 @@ const objConfig = {
   scale: types.number(1, {range: [0.1, 1000]}),
 }
 
-const TurtleRenderer: React.FC<{
+const TurtleRenderer: React.FCWithChildren<{
   sheet: ISheet
   objKey: string
   width: number

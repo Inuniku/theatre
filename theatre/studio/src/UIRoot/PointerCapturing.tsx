@@ -100,9 +100,9 @@ const PointerCapturingContext = React.createContext<PointerCapturingFn>(
   null as $IntentionalAny,
 )
 
-const ProviderChildrenMemo: React.FC<{}> = React.memo(({children}) => (
-  <>{children}</>
-))
+const ProviderChildrenMemo: React.FCWithChildren<{}> = React.memo(
+  ({children}) => <>{children}</>,
+)
 
 /**
  * See {@link PointerCapturing}.

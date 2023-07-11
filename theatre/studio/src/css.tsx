@@ -104,9 +104,9 @@ const propNames = [
 
 const isPropValid = (propName: string) => !propNames.includes(propName)
 
-export const ProvideStyles: React.FC<{target: undefined | HTMLElement}> = (
-  props,
-) => {
+export const ProvideStyles: React.FCWithChildren<{
+  target: undefined | HTMLElement
+}> = (props) => {
   return (
     <StyleSheetManager
       target={props.target}
@@ -125,16 +125,16 @@ export const ProvideStyles: React.FC<{target: undefined | HTMLElement}> = (
 }
 
 export function withStyledShadow<Props>(
-  Comp: React.ComponentType<Props>,
+  Comp: React.FCWithChildren<Props>,
 ): React.ComponentType<Props> {
   return (props) => (
     <ProvideStyledShadow>
-      <Comp {...props} />
+      <Comp {...(props as $IntentionalAny)} />
     </ProvideStyledShadow>
   )
 }
 
-const ProvideStyledShadow: React.FC<{}> = (props) => {
+const ProvideStyledShadow: React.FCWithChildren<{}> = (props) => {
   const [template, ref] = useState<null | HTMLTemplateElement>(null)
   const [shadowRoot, setShadowRoot] = useState<null | ShadowRoot>(null)
 

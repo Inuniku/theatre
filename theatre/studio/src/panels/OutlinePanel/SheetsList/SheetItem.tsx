@@ -16,7 +16,7 @@ const Container = styled.li<{isSelected: boolean}>`
 
 const Body = styled.div``
 
-export const SheetItem: React.FC<{
+export const SheetItem: React.FCWithChildren<{
   depth: number
   sheetId: string
   project: Project

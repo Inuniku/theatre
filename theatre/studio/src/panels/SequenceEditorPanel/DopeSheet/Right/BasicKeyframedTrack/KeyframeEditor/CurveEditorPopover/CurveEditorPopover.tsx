@@ -296,11 +296,14 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
 
   // A map to store all html elements corresponding to easing options
   const optionsRef = useRef(
-    EASING_PRESETS.reduce((acc, curr) => {
-      acc[curr.label] = {current: null}
+    EASING_PRESETS.reduce(
+      (acc, curr) => {
+        acc[curr.label] = {current: null}
 
-      return acc
-    }, {} as {[key: string]: {current: HTMLDivElement | null}}),
+        return acc
+      },
+      {} as {[key: string]: {current: HTMLDivElement | null}},
+    ),
   )
 
   const [optionsContainerRef, optionsContainer] =
@@ -386,7 +389,7 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
       />
       <OptionsContainer
         ref={optionsContainerRef}
-        onKeyDown={(evt) => grid.onParentEltKeyDown(evt)}
+        onKeyDown={(e: KeyboardEvent) => grid.onParentEltKeyDown(e)}
       >
         {grid.gridItems}
         {grid.gridItems.length === 0 ? (

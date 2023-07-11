@@ -8,7 +8,7 @@ import RightRow from './Row'
 import {collectAggregateKeyframesInPrism} from './collectAggregateKeyframes'
 import AggregatedKeyframeTrack from './AggregatedKeyframeTrack/AggregatedKeyframeTrack'
 
-const SheetRow: React.FC<{
+const SheetRow: React.FCWithChildren<{
   leaf: SequenceEditorTree_Sheet
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({leaf, layoutP}) => {

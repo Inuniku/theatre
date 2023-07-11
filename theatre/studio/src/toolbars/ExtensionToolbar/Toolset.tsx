@@ -7,7 +7,7 @@ import IconButton from './tools/IconButton'
 import Switch from './tools/Switch'
 import ExtensionFlyoutMenu from './tools/ExtensionFlyoutMenu'
 
-const Toolset: React.FC<{
+const Toolset: React.FCWithChildren<{
   config: ToolsetConfig
 }> = (props) => {
   return (
@@ -20,7 +20,7 @@ const Toolset: React.FC<{
 }
 
 const toolByType: {
-  [Key in ToolConfig['type']]: React.FC<{
+  [Key in ToolConfig['type']]: React.FCWithChildren<{
     config: Extract<ToolConfig, {type: Key}>
   }>
 } = {
@@ -31,11 +31,11 @@ const toolByType: {
 
 function getToolByType<Type extends ToolConfig['type']>(
   type: Type,
-): React.FC<{config: Extract<ToolConfig, {type: Type}>}> {
+): React.FCWithChildren<{config: Extract<ToolConfig, {type: Type}>}> {
   return toolByType[type] as $IntentionalAny
 }
 
-const Tool: React.FC<{config: ToolConfig}> = ({config}) => {
+const Tool: React.FCWithChildren<{config: ToolConfig}> = ({config}) => {
   const Comp = getToolByType(config.type)
 
   if (!Comp) {

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 const Container = styled.div``
 
-const ToolbarDropdownSelect: React.FC<{
+const ToolbarDropdownSelect: React.FCWithChildren<{
   value: string
   options: Array<{label: string; value: string; icon: React.ReactElement}>
   onChange: (value: string) => void

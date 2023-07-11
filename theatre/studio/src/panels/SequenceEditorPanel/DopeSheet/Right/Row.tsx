@@ -47,7 +47,7 @@ const RightRowChildren = styled.ul`
  * retain its hierarchy. It's just the DOM tree that should be list-based.
  */
 
-const RightRow: React.FC<{
+const RightRow: React.FCWithChildren<{
   leaf: SequenceEditorTree_Row<string>
   node: React.ReactElement
   isCollapsed: boolean

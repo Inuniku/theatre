@@ -135,7 +135,7 @@ const RENDER_OUT_OF_VIEW_X = -10000
  * This appears at the end of the sequence where you can adjust the length of the sequence.
  * Kinda looks like `< >` at the top bar at end of the sequence editor.
  */
-const LengthIndicator: React.FC<IProps> = ({layoutP}) => {
+const LengthIndicator: React.FCWithChildren<IProps> = ({layoutP}) => {
   const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)
   const [isDragging] = useDragBulge(node, {layoutP})
   const {
@@ -188,7 +188,7 @@ const LengthIndicator: React.FC<IProps> = ({layoutP}) => {
             <Tumb
               ref={nodeRef}
               // title="Length of the sequence. Drag or click to change."
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 togglePopover(e, node!)
               }}
               {...includeLockFrameStampAttrs('hide')}

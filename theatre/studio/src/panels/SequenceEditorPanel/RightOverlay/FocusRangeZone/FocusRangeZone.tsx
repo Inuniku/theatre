@@ -32,7 +32,7 @@ const Container = styled.div<{isShiftDown: boolean}>`
   cursor: ${(props) => (props.isShiftDown ? 'ew-resize' : 'move')};
 `
 
-const FocusRangeZone: React.FC<{
+const FocusRangeZone: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const [containerRef, containerNode] = useRefAndState<HTMLElement | null>(null)
@@ -185,7 +185,7 @@ function usePanelDragZoneGestureHandlers(
 
           return {
             onDrag(dx, dy) {
-              const newDims: typeof panelStuffRef.current['dims'] = {
+              const newDims: (typeof panelStuffRef.current)['dims'] = {
                 ...stuffBeforeDrag.dims,
                 top: clamp(
                   stuffBeforeDrag.dims.top + dy,

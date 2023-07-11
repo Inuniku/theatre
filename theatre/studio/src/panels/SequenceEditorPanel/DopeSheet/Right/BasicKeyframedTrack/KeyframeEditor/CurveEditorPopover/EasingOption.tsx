@@ -1,5 +1,5 @@
 import useTooltip from '@theatre/studio/uiComponents/Popover/useTooltip'
-import React from 'react'
+import React, {type ComponentPropsWithoutRef} from 'react'
 import styled, {css} from 'styled-components'
 import {handlesFromCssCubicBezierArgs} from './shared'
 import SVGCurveSegment from './SVGCurveSegment'
@@ -54,11 +54,15 @@ type IProps = {
   }
   tooltipPlacement: 'top' | 'bottom'
   isSelected: boolean
-} & Parameters<typeof Wrapper>[0]
+} & ComponentPropsWithoutRef<typeof Wrapper>
 
-const EasingOption: React.FC<IProps> = React.forwardRef((props, ref) => {
+const EasingOption = React.forwardRef<HTMLDivElement, IProps>((props, ref) => {
   const [tooltip, tooltipHostRef] = useTooltip(
-    {enabled: true, verticalPlacement: props.tooltipPlacement, verticalGap: 0},
+    {
+      enabled: true,
+      verticalPlacement: props.tooltipPlacement,
+      verticalGap: 0,
+    },
     () => (
       <EasingTooltip showPopoverEdgeTriangle={false}>
         {props.easing.label}

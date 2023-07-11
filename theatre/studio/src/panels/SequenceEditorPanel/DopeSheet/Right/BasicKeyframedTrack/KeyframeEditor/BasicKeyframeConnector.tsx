@@ -100,7 +100,7 @@ const BasicKeyframeConnector: React.VFC<IBasicKeyframeConnectorProps> = (
 }
 export default BasicKeyframeConnector
 
-const SingleCurveEditorPopover: React.FC<
+const SingleCurveEditorPopover: React.FCWithChildren<
   IBasicKeyframeConnectorProps & {closePopover: (reason: string) => void}
 > = React.forwardRef((props, ref) => {
   const {

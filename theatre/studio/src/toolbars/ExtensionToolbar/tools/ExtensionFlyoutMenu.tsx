@@ -19,7 +19,7 @@ const Container = styled.div`
   }
 `
 
-const ExtensionFlyoutMenu: React.FC<{
+const ExtensionFlyoutMenu: React.FCWithChildren<{
   config: ToolConfigFlyoutMenu
 }> = ({config}) => {
   const triggerRef = useRef<null | HTMLElement>(null)
@@ -68,7 +68,7 @@ const ExtensionFlyoutMenu: React.FC<{
       {popover.node}
       <ToolbarIconButton
         ref={triggerRef as $IntentionalAny}
-        onClick={(e) => {
+        onClick={(e: React.MouseEvent) => {
           popover.open(e, triggerRef.current!)
         }}
       >

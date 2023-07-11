@@ -27,7 +27,7 @@ const EasingPopoverWrapper = styled(BasicPopover)`
   --popover-outer-stroke: transparent;
   --popover-inner-stroke: rgba(26, 28, 30, 0.97);
 `
-export const AggregateCurveEditorPopover: React.FC<
+export const AggregateCurveEditorPopover: React.FCWithChildren<
   IAggregateKeyframeEditorProps & {closePopover: (reason: string) => void}
 > = React.forwardRef((props, ref) => {
   const {allConnections} = useAggregateKeyframeEditorUtils(props)
@@ -47,62 +47,63 @@ export const AggregateCurveEditorPopover: React.FC<
   )
 })
 
-export const AggregateKeyframeConnector: React.VFC<IAggregateKeyframeConnectorProps> =
-  (props) => {
-    const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)
-    const {editorProps} = props
+export const AggregateKeyframeConnector: React.FC<
+  IAggregateKeyframeConnectorProps
+> = (props) => {
+  const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)
+  const {editorProps} = props
 
-    const [contextMenu] = useConnectorContextMenu(props, node)
-    const [isDragging] = useDragKeyframe(node, props.editorProps)
+  const [contextMenu] = useConnectorContextMenu(props, node)
+  const [isDragging] = useDragKeyframe(node, props.editorProps)
 
-    const {
-      node: popoverNode,
-      toggle: togglePopover,
-      close: closePopover,
-    } = usePopover(
-      () => {
-        const rightDims = val(editorProps.layoutP.rightDims)
+  const {
+    node: popoverNode,
+    toggle: togglePopover,
+    close: closePopover,
+  } = usePopover(
+    () => {
+      const rightDims = val(editorProps.layoutP.rightDims)
 
-        return {
-          debugName: 'Connector',
-          constraints: {
-            minX: rightDims.screenX + POPOVER_MARGIN_PX,
-            maxX: rightDims.screenX + rightDims.width - POPOVER_MARGIN_PX,
-          },
-        }
-      },
-      () => {
-        return (
-          <AggregateCurveEditorPopover
-            {...editorProps}
-            closePopover={closePopover}
-          />
-        )
-      },
-    )
-
-    const {connected, isAggregateEditingInCurvePopover} = props.utils
-
-    // We don't want to interrupt an existing drag, so in order to persist the dragged
-    // html node, we just set the connector length to 0, but we don't remove it yet.
-    return connected || isDragging ? (
-      <>
-        <ConnectorLine
-          ref={nodeRef}
-          connectorLengthInUnitSpace={connected ? connected.length : 0}
-          isSelected={connected ? connected.selected : false}
-          isPopoverOpen={isAggregateEditingInCurvePopover}
-          openPopover={(e) => {
-            if (node) togglePopover(e, node)
-          }}
+      return {
+        debugName: 'Connector',
+        constraints: {
+          minX: rightDims.screenX + POPOVER_MARGIN_PX,
+          maxX: rightDims.screenX + rightDims.width - POPOVER_MARGIN_PX,
+        },
+      }
+    },
+    () => {
+      return (
+        <AggregateCurveEditorPopover
+          {...editorProps}
+          closePopover={closePopover}
         />
-        {popoverNode}
-        {contextMenu}
-      </>
-    ) : (
-      <></>
-    )
-  }
+      )
+    },
+  )
+
+  const {connected, isAggregateEditingInCurvePopover} = props.utils
+
+  // We don't want to interrupt an existing drag, so in order to persist the dragged
+  // html node, we just set the connector length to 0, but we don't remove it yet.
+  return connected || isDragging ? (
+    <>
+      <ConnectorLine
+        ref={nodeRef}
+        connectorLengthInUnitSpace={connected ? connected.length : 0}
+        isSelected={connected ? connected.selected : false}
+        isPopoverOpen={isAggregateEditingInCurvePopover}
+        openPopover={(e) => {
+          if (node) togglePopover(e, node)
+        }}
+      />
+      {popoverNode}
+      {contextMenu}
+    </>
+  ) : (
+    <></>
+  )
+}
 type IAggregateKeyframeConnectorProps = {
   utils: IAggregateKeyframeEditorUtils
   editorProps: IAggregateKeyframeEditorProps

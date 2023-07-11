@@ -23,7 +23,7 @@ const Container = styled.div`
   pointer-events: none;
 `
 
-const RightOverlay: React.FC<{
+const RightOverlay: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   return usePrism(() => {

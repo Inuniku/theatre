@@ -12,7 +12,7 @@ export const Li = styled.li<{isSelected: boolean}>`
   color: ${(props) => (props.isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
 `
 
-const ObjectsList: React.FC<{
+const ObjectsList: React.FCWithChildren<{
   depth: number
   sheet: Sheet
 }> = ({sheet, depth}) => {

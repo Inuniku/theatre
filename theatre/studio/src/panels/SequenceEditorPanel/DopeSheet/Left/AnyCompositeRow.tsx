@@ -77,7 +77,7 @@ const LeftRowChildren = styled.ul`
   list-style: none;
 `
 
-const AnyCompositeRow: React.FC<{
+const AnyCompositeRow: React.FCWithChildren<{
   leaf:
     | SequenceEditorTree_Sheet
     | SequenceEditorTree_PrimitiveProp

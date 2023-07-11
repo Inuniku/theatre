@@ -112,7 +112,7 @@ function clampRange(
   return [start + overflow, end + overflow]
 }
 
-const FocusRangeStrip: React.FC<{
+const FocusRangeStrip: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const existingRangeD = useMemo(

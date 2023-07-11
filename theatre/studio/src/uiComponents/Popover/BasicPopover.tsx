@@ -23,7 +23,9 @@ const Container = styled.div`
   border-radius: 3px;
   z-index: 10000;
   border: 1px solid var(--popover-inner-stroke);
-  box-shadow: 0 0 0 1px var(--popover-outer-stroke), 0 6px 8px -4px black;
+  box-shadow:
+    0 0 0 1px var(--popover-outer-stroke),
+    0 6px 8px -4px black;
   backdrop-filter: blur(8px);
 
   & a {
@@ -31,7 +33,7 @@ const Container = styled.div`
   }
 `
 
-const BasicPopover: React.FC<{
+const BasicPopover: React.FCWithChildren<{
   className?: string
   showPopoverEdgeTriangle?: boolean
 }> = React.forwardRef(

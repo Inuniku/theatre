@@ -4,7 +4,7 @@ import React from 'react'
 import {SheetItem} from './SheetItem'
 import type Project from '@theatre/core/projects/Project'
 
-const SheetsList: React.FC<{
+const SheetsList: React.FCWithChildren<{
   project: Project
   depth: number
 }> = ({project, depth}) => {

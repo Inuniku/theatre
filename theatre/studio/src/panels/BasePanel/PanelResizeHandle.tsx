@@ -138,7 +138,7 @@ const cursors: {[which in Which]: string} = {
   BottomRight: 'se-resize',
 }
 
-const PanelResizeHandle: React.FC<{
+const PanelResizeHandle: React.FCWithChildren<{
   which: Which
 }> = ({which}) => {
   const panelStuff = usePanel()
@@ -158,7 +158,7 @@ const PanelResizeHandle: React.FC<{
 
         return {
           onDrag(dx, dy) {
-            const newDims: typeof panelStuff['dims'] = {
+            const newDims: (typeof panelStuff)['dims'] = {
               ...stuffBeforeDrag.dims,
             }
 

@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import type {$FixMe, $IntentionalAny} from '@theatre/shared/utils/types'
 import type {DeepPartialOfSerializableValue, SerializableMap} from './types'
 
 /**
@@ -72,7 +72,7 @@ export default function deepMergeWithCache<T extends SerializableMap>(
     // @ts-ignore @todo
     merged[key] =
       typeof valueInOverride === 'object' && typeof valueInBase === 'object'
-        ? deepMergeWithCache(valueInBase, valueInOverride, cache)
+        ? deepMergeWithCache(valueInBase as $FixMe, valueInOverride, cache)
         : valueInOverride === undefined
         ? valueInBase
         : valueInOverride

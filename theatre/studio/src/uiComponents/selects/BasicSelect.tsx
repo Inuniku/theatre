@@ -1,4 +1,3 @@
-import type {ElementType} from 'react'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -22,8 +21,8 @@ type Option = {
   value: string
 }
 
-const BasicSelect: React.FC<{
-  label: string | ElementType
+const BasicSelect: React.FCWithChildren<{
+  label: React.ReactNode
   options: Array<Option>
   value: string | undefined
   defaultOption: undefined | string
@@ -32,9 +31,8 @@ const BasicSelect: React.FC<{
   // const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectedValue =
     typeof props.value === 'string' ? props.value : props.defaultOption
-  const selectedLabel = props.options.find(
-    (opt) => opt.value === selectedValue,
-  )?.label
+  const selectedLabel = props.options.find((opt) => opt.value === selectedValue)
+    ?.label
 
   return (
     <Container>

@@ -32,7 +32,7 @@ const Container = styled.div<{isShiftDown: boolean}>`
   cursor: ${(props) => (props.isShiftDown ? 'cell' : 'default')};
 `
 
-const DopeSheetSelectionView: React.FC<{
+const DopeSheetSelectionView: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   height: number
 }> = ({layoutP, children, height}) => {

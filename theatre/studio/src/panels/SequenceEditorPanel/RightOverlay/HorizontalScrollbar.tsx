@@ -118,7 +118,7 @@ const Tooltip = styled.div<{active: boolean}>`
 /**
  * The little scrollbar on the bottom of the Right side
  */
-const HorizontalScrollbar: React.FC<{
+const HorizontalScrollbar: React.FCWithChildren<{
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({layoutP}) => {
   const unitPosToHumanReadablePos = useCallback((n: number) => n.toFixed(2), [])

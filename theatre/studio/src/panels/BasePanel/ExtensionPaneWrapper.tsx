@@ -24,7 +24,7 @@ const defaultPosition: PanelPosition = {
 
 const minDims = {width: 300, height: 300}
 
-const ExtensionPaneWrapper: React.FC<{
+const ExtensionPaneWrapper: React.FCWithChildren<{
   paneInstance: PaneInstance<$FixMe>
 }> = ({paneInstance}) => {
   return (
@@ -116,7 +116,7 @@ const ErrorContainer = styled.div`
   }
 `
 
-const ErrorFallback: React.FC<{error: Error}> = (props) => {
+const ErrorFallback: React.FCWithChildren<{error: Error}> = (props) => {
   return (
     <ErrorContainer>
       An Error occurred rendering this pane. Open the console for more info.
@@ -131,7 +131,7 @@ const ErrorFallback: React.FC<{error: Error}> = (props) => {
   )
 }
 
-const Content: React.FC<{paneInstance: PaneInstance<$FixMe>}> = ({
+const Content: React.FCWithChildren<{paneInstance: PaneInstance<$FixMe>}> = ({
   paneInstance,
 }) => {
   const [mountingPoint, setMountingPoint] = useState<HTMLElement | null>(null)
