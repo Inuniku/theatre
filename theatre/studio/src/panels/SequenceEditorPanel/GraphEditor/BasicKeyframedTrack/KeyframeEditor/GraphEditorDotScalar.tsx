@@ -58,7 +58,7 @@ const HitZone = styled.circle`
 
 type IProps = Parameters<typeof KeyframeEditor>[0]
 
-const GraphEditorDotScalar: React.VFC<IProps> = (props) => {
+const GraphEditorDotScalar: React.FC<IProps> = (props) => {
   const [ref, node] = useRefAndState<SVGCircleElement | null>(null)
 
   const {index, trackData} = props
@@ -85,11 +85,9 @@ const GraphEditorDotScalar: React.VFC<IProps> = (props) => {
     node,
     props,
     // dragging does not work with also having a click listener
-    onDetectedClick: (event) =>
-      inlineEditorPopover.toggle(
-        event,
-        event.target instanceof Element ? event.target : node!,
-      ),
+    onDetectedClick: (event) => {
+      inlineEditorPopover.toggle(event, ref.current!)
+    },
   })
 
   return (
