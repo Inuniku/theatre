@@ -11,7 +11,7 @@
     "verbatimModuleSyntax": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react",
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "declarationMap": true,
     "stripInternal": true,

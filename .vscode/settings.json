@@ -21,5 +21,11 @@
   "eslint.lintTask.enable": true,
   "eslint.lintTask.options": ". --ext ts,tsx --ignore-path=.gitignore --rulesdir ./devEnv/eslint/rules",
   "jest.jestCommandLine": "yarn jest",
-  "cSpell.words": ["ahistoric", "dataverse", "theatrejs", "toolset"]
+  "cSpell.words": [
+    "ahistoric",
+    "dataverse",
+    "theatrejs",
+    "toolset",
+    "trackdata"
+  ]
 }

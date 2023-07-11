@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "@theatre/core": ["../../theatre/core/src/index.ts"],
@@ -34,7 +34,8 @@
     "../../theatre/studio/src",
     "../../theatre/shared/src",
     "../../packages/react",
-    "../../theatre/globals.d.ts"
+    "../../theatre/globals.d.ts",
+    "../../theatre/env.d.ts"
   ],
   "exclude": [
     "*/**/dist",

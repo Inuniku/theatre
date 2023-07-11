@@ -1,11 +1,11 @@
 import path from 'path'
-import {build} from 'esbuild'
+import {context} from 'esbuild'
 import {definedGlobals} from './definedGlobals'
 
-export function createBundles(watch: boolean) {
+export async function createBundles(watch: boolean) {
   for (const which of ['core', 'studio']) {
     const pathToPackage = path.join(__dirname, '../', which)
-    const esbuildConfig: Parameters<typeof build>[0] = {
+    const esbuildConfig: Parameters<typeof context>[0] = {
       entryPoints: [path.join(pathToPackage, 'src/index.ts')],
       target: ['es6'],
       loader: {'.png': 'file', '.svg': 'dataurl'},
@@ -15,7 +15,6 @@ export function createBundles(watch: boolean) {
         ...definedGlobals,
         __IS_VISUAL_REGRESSION_TESTING: 'false',
       },
-      watch,
       external: [
         '@theatre/dataverse',
         /**
@@ -53,12 +52,15 @@ export function createBundles(watch: boolean) {
       esbuildConfig.minify = true
     }
 
-    build({
+    const ctx = await context({
       ...esbuildConfig,
       outfile: path.join(pathToPackage, 'dist/index.js'),
       format: 'cjs',
     })
 
+    await ctx[watch ? 'watch' : 'rebuild']()
+
+    await ctx.dispose()
     /**
      * @remarks
      * I just disabled ESM builds because I couldn't get them to work

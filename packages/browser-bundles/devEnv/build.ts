@@ -1,5 +1,5 @@
 import * as path from 'path'
-import {build} from 'esbuild'
+import {context} from 'esbuild'
 import type {Plugin} from 'esbuild'
 
 const definedGlobals = {
@@ -9,13 +9,12 @@ const definedGlobals = {
   ),
 }
 
-function createBundles(watch: boolean) {
+async function createBundles(watch: boolean) {
   const pathToPackage = path.join(__dirname, '../')
-  const esbuildConfig: Parameters<typeof build>[0] = {
+  const esbuildConfig: Parameters<typeof context>[0] = {
     bundle: true,
     sourcemap: true,
     define: definedGlobals,
-    watch,
     platform: 'browser',
     loader: {
       '.png': 'dataurl',
@@ -35,14 +34,14 @@ function createBundles(watch: boolean) {
   //   format: 'iife',
   // })
 
-  build({
+  const ctx1Promise = context({
     ...esbuildConfig,
     entryPoints: [path.join(pathToPackage, 'src/core-and-studio.ts')],
     outfile: path.join(pathToPackage, 'dist/core-and-studio.js'),
     format: 'iife',
   })
 
-  build({
+  const ctx2Promise = context({
     ...esbuildConfig,
     entryPoints: [path.join(pathToPackage, 'src/core-only.ts')],
     outfile: path.join(pathToPackage, 'dist/core-only.min.js'),
@@ -53,6 +52,15 @@ function createBundles(watch: boolean) {
       'process.env.NODE_ENV': JSON.stringify('production'),
     },
   })
+
+  const [ctx1, ctx2] = await Promise.all([ctx1Promise, ctx2Promise])
+
+  await Promise.all([
+    ctx1[watch ? 'watch' : 'rebuild'](),
+    ctx2[watch ? 'watch' : 'rebuild'](),
+  ])
+
+  await Promise.all([ctx1.dispose(), ctx2.dispose()])
 
   // build({
   //   ...esbuildConfig,

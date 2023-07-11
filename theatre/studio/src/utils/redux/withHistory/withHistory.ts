@@ -4,7 +4,7 @@ import type {
   $IntentionalAny,
   ReduxReducer,
 } from '@theatre/shared/utils/types'
-import jiff from 'jiff'
+import jiff, {type JSONValue} from 'jiff'
 import patch from 'json-touch-patch'
 import last from 'lodash-es/last'
 import {v4 as makeUUID} from 'uuid'
@@ -29,7 +29,7 @@ export const historicActions = {
 }
 
 export type HistoricAction =
-  typeof historicActions[keyof typeof historicActions]['ActionType']
+  (typeof historicActions)[keyof typeof historicActions]['ActionType']
 
 export const isHistoricAction = (a: unknown): a is HistoricAction => {
   return Object.entries(historicActions).some(([, actionCreator]) =>
@@ -120,7 +120,7 @@ function createEmptyHistory<PersistedState>(
   }
 }
 
-function pushCommit<InnerState>(
+function pushCommit<InnerState extends JSONValue>(
   prevHistory: IWithHistory<InnerState>,
   newInnerState: InnerState,
   config: WithHistoryConfig,
@@ -188,7 +188,7 @@ function pushCommit<InnerState>(
   return newHistory
 }
 
-function createCommit<Snapshot>(
+function createCommit<Snapshot extends JSONValue>(
   oldSnapshot: Snapshot,
   newSnapshot: Snapshot,
 ): Commit {

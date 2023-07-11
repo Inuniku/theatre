@@ -21,6 +21,7 @@ import type {
   SequenceMarkerId,
   SequenceTrackId,
   UIPanelId,
+  ProjectId,
 } from '@theatre/shared/utils/ids'
 import {
   generateKeyframeId,
@@ -48,6 +49,7 @@ import type {
   PanelPosition,
   StudioAhistoricState,
   StudioEphemeralState,
+  StudioHistoricStateProject,
   StudioHistoricStateSequenceEditorMarker,
 } from './types'
 import {clamp, uniq} from 'lodash-es'
@@ -62,6 +64,14 @@ import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
 import type SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
 import type {PropTypeConfig} from '@theatre/core/propTypes'
 import {pointableSetUtil} from '@theatre/shared/utils/PointableSet'
+
+type StudioAhistoricStateProject = NonNullable<
+  StudioAhistoricState['projects']['stateByProjectId'][ProjectId]
+>
+
+type StudioEphemeralStateProject = NonNullable<
+  StudioEphemeralState['projects']['stateByProjectId'][ProjectId]
+>
 
 export const setDrafts__onlyMeantToBeCalledByTransaction = (
   drafts: undefined | Drafts,
@@ -179,7 +189,9 @@ namespace stateEditors {
               }
             }
 
-            return s.projects.stateByProjectId[p.projectId]!
+            return s.projects.stateByProjectId[
+              p.projectId
+            ]! as StudioHistoricStateProject
           }
 
           export namespace stateBySheetId {
@@ -370,7 +382,9 @@ namespace stateEditors {
               }
             }
 
-            return s.projects.stateByProjectId[p.projectId]!
+            return s.projects.stateByProjectId[
+              p.projectId
+            ]! as StudioEphemeralStateProject
           }
 
           export namespace stateBySheetId {
@@ -476,8 +490,9 @@ namespace stateEditors {
                 stateBySheetId: {},
               }
             }
-
-            return s.projects.stateByProjectId[p.projectId]!
+            return s.projects.stateByProjectId[
+              p.projectId
+            ]! as StudioAhistoricStateProject
           }
 
           export namespace collapsedItemsInOutline {
