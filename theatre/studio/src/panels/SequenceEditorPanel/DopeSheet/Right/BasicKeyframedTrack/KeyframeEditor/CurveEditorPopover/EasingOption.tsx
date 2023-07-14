@@ -3,9 +3,9 @@ import React, {type ComponentPropsWithoutRef} from 'react'
 import styled, {css} from 'styled-components'
 import {handlesFromCssCubicBezierArgs} from './shared'
 import SVGCurveSegment from './SVGCurveSegment'
-import {mergeRefs} from 'react-merge-refs'
 import {COLOR_BASE} from './colors'
 import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import {mergeRefs} from '@theatre/studio/utils/mergeRefs'
 
 const Wrapper = styled.div<{isSelected: boolean}>`
   position: relative;

@@ -2,7 +2,6 @@ import type {ComponentProps, ComponentType, Ref, RefAttributes} from 'react'
 import {useMemo, useState} from 'react'
 import React, {forwardRef, useEffect, useLayoutEffect, useRef} from 'react'
 import {allRegisteredObjects, editorStore} from './store'
-import {mergeRefs} from 'react-merge-refs'
 import useInvalidate from './useInvalidate'
 import {useCurrentSheet} from './SheetProvider'
 import defaultEditableFactoryConfig from './defaultEditableFactoryConfig'
@@ -12,6 +11,7 @@ import type {$FixMe, $IntentionalAny} from '../types'
 import type {ISheetObject} from '@theatre/core'
 import {notify} from '@theatre/core'
 import {useCurrentRafDriver} from './RafDriverProvider'
+import {mergeRefs} from '@theatre/studio/utils/mergeRefs'
 
 const createEditable = <Keys extends keyof JSX.IntrinsicElements>(
   config: EditableFactoryConfig,

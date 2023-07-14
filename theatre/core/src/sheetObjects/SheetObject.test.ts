@@ -276,6 +276,8 @@ describe(`SheetObject`, () => {
                       handles: [0.5, 0.5, 0.5, 0.5],
                       type: 'bezier',
                       value: 3,
+                      tangentIn: 'ease',
+                      tangentOut: 'ease',
                     },
                     {
                       id: asKeyframeId('1'),
@@ -284,6 +286,8 @@ describe(`SheetObject`, () => {
                       handles: [0.5, 0.5, 0.5, 0.5],
                       type: 'bezier',
                       value: 6,
+                      tangentIn: 'ease',
+                      tangentOut: 'ease',
                     },
                   ],
                 },

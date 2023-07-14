@@ -4,6 +4,7 @@ import type {
   Keyframe,
   KeyframeType,
   SheetState_Historic,
+  TangentType,
 } from '@theatre/core/projects/store/types/SheetState_Historic'
 import type {Drafts} from '@theatre/studio/StudioStore/StudioStore'
 import type {
@@ -64,6 +65,13 @@ import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
 import type SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
 import type {PropTypeConfig} from '@theatre/core/propTypes'
 import {pointableSetUtil} from '@theatre/shared/utils/PointableSet'
+import {
+  eBezTriple_Handle,
+  type BezTriple,
+  eBezTriple_Auto_Type,
+  bezier_handle_calc_smooth_fcurve,
+  eBezTriple_Flag,
+} from '../utils/solveSmoothCurve'
 
 type StudioAhistoricStateProject = NonNullable<
   StudioAhistoricState['projects']['stateByProjectId'][ProjectId]
@@ -797,6 +805,8 @@ namespace stateEditors {
               value: T
               snappingFunction: SnappingFunction
               type?: KeyframeType
+              tangentIn?: TangentType
+              tangentOut?: TangentType
             },
           ) {
             const position = p.snappingFunction(p.position)
@@ -824,8 +834,10 @@ namespace stateEditors {
                 position,
                 connectedRight: true,
                 handles: p.handles || [0.5, 1, 0.5, 0],
-                type: p.type || 'bezier',
+                type: p.type ?? 'bezier',
                 value: p.value,
+                tangentIn: p.tangentIn ?? 'ease',
+                tangentOut: p.tangentOut ?? 'ease',
               })
               return
             }
@@ -837,6 +849,8 @@ namespace stateEditors {
               handles: p.handles || [0.5, 1, 0.5, 0],
               type: p.type || 'bezier',
               value: p.value,
+              tangentIn: leftKeyframe.tangentOut,
+              tangentOut: 'ease',
             })
           }
 
@@ -995,6 +1009,20 @@ namespace stateEditors {
             const kf = _getKeyframeById(p)
             if (kf) {
               kf.type = p.keyframeType
+            }
+          }
+
+          export function setKeyframe(
+            p: WithoutSheetInstance<SheetObjectAddress> & {
+              trackId: SequenceTrackId
+              keyframeId: KeyframeId
+              props: Partial<Omit<Keyframe, 'id'>>
+            },
+          ) {
+            const kf = _getKeyframeById(p)
+            if (kf) {
+              Object.assign(kf, p.props)
+              // applyAutoTangents(p)
             }
           }
 

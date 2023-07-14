@@ -188,6 +188,8 @@ function pasteKeyframesContextMenuItem(
               value: keyframe.value,
               snappingFunction: sequence.closestGridPosition,
               type: keyframe.type,
+              tangentIn: keyframe.tangentIn,
+              tangentOut: keyframe.tangentOut,
             },
           )
         }

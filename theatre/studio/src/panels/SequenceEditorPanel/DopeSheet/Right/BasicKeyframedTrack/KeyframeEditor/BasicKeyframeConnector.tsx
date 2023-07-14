@@ -89,11 +89,11 @@ const BasicKeyframeConnector: React.VFC<IBasicKeyframeConnectorProps> = (
         openPopover={(e) => {
           if (node) togglePopover(e, node)
         }}
-      >
-        {popoverNode}
-      </ConnectorLine>
+      ></ConnectorLine>
       {/* contextMenu is placed outside of the ConnectorLine so that clicking on
       the contextMenu does not count as clicking on the ConnectorLine */}
+
+      {popoverNode}
       {contextMenu}
     </>
   )

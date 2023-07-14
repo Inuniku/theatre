@@ -73,6 +73,8 @@ export type TrackData = BasicKeyframedTrack
 
 export type KeyframeType = 'bezier' | 'hold'
 
+export type TangentType = 'ease' | 'auto' | 'linear' | 'constant'
+
 export type Keyframe = {
   id: KeyframeId
   /** The `value` is the raw value type such as `Rgba` or `number`. See {@link SerializableValue} */
@@ -84,6 +86,8 @@ export type Keyframe = {
   connectedRight: boolean
   // defaults to 'bezier' to support project states made with theatre0.5.1 or earlier
   type?: KeyframeType
+  tangentIn: TangentType
+  tangentOut: TangentType
 }
 
 type TrackDataCommon<TypeName extends string> = {

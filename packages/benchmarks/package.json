@@ -20,10 +20,10 @@
     "@theatre/studio": "workspace:*",
     "@theatre/studio-0.5.0": "npm:@theatre/studio@0.5.0",
     "@types/jest": "^29.5.3",
-    "@types/lodash-es": "^4.17.7",
-    "@types/node": "^20.4.1",
-    "@types/react": "^18.2.14",
-    "esbuild": "^0.18.11",
+    "@types/lodash-es": "^4.17.8",
+    "@types/node": "^20.4.2",
+    "@types/react": "^18.2.15",
+    "esbuild": "^0.18.12",
     "esbuild-register": "^3.4.2",
     "typescript": "^5.1.6"
   }

@@ -22,7 +22,10 @@ import {
 } from './shared'
 import {COLOR_BASE, COLOR_POPOVER_BACK} from './colors'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {
+  Keyframe,
+  TangentType,
+} from '@theatre/core/projects/store/types/SheetState_Historic'
 import {useUIOptionGrid, Outcome} from './useUIOptionGrid'
 import type {KeyframeConnectionWithAddress} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
 
@@ -129,7 +132,7 @@ type ICurveEditorPopoverProps = {
   additionalConnections: Array<KeyframeConnectionWithAddress>
 }
 
-const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
+const CurveEditorPopover = (props: ICurveEditorPopoverProps) => {
   const allConnections = useMemo(
     () => [props.curveConnection, ...props.additionalConnections],
     [props.curveConnection, ...props.additionalConnections],
@@ -138,7 +141,7 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
   ////// `tempTransaction` //////
   /*
    * `tempTransaction` is used for all edits in this popover. The transaction
-   * is discared if the user presses escape, otherwise it is committed when the
+   * is discarded if the user presses escape, otherwise it is committed when the
    * popover closes.
    */
   const tempTransaction = useRef<CommitOrDiscard | null>(null)
@@ -189,7 +192,7 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
       grid.focusFirstItem()
       optionsRef.current[displayedPresets[0].label]?.current?.focus()
     } else if (e.key === 'Escape') {
-      discardTempValue(tempTransaction)
+      discardTempTransaction(tempTransaction)
       props.onRequestClose('key Escape')
     } else if (e.key === 'Enter') {
       props.onRequestClose('key Enter')
@@ -213,16 +216,30 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
   )
   // `preview` is used when hovering over a curve to preview it.
   const [preview, setPreview] = useState<CSSCubicBezierArgsString | null>(null)
+  const [leftTangent, setLeftTangent] = useState(
+    props.curveConnection.left.tangentOut,
+  )
+
+  const [rightTangent, setRightTangent] = useState(
+    props.curveConnection.right.tangentIn,
+  )
 
   // When `preview` or `edit` change, use the `tempTransaction` to change the
-  // curve in Theate's data.
+  // curve in Theatre's data.
   useEffect(() => {
     if (
       textInputMode !== TextInputMode.init &&
       textInputMode !== TextInputMode.multipleValues
     )
-      setTempValue(tempTransaction, allConnections, preview ?? edit ?? '')
-  }, [preview, edit, textInputMode])
+      setTempValue(
+        tempTransaction,
+        allConnections,
+        preview ?? edit ?? '',
+        leftTangent,
+        rightTangent,
+      )
+    console.log('Change')
+  }, [preview, edit, textInputMode, leftTangent, rightTangent])
 
   ////// selection stuff //////
   if (
@@ -271,7 +288,7 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
   ////// Option grid specification and reactivity //////
   const onEasingOptionKeydown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
-      discardTempValue(tempTransaction)
+      discardTempTransaction(tempTransaction)
       props.onRequestClose('key Escape')
       e.stopPropagation()
     } else if (e.key === 'Enter') {
@@ -287,10 +304,33 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
     setPreview(item.value)
   }
   const onEasingOptionMouseOut = () => setPreview(null)
-  const onSelectEasingOption = (item: {label: string; value: string}) => {
-    setTempValue(tempTransaction, allConnections, item.value)
-    props.onRequestClose('selected easing option')
 
+  const handleSelectEasingOption = (item: {label: string; value: string}) => {
+    setTempValue(tempTransaction, allConnections, item.value, 'ease', 'ease')
+    props.onRequestClose('selected easing option')
+    return Outcome.Handled
+  }
+
+  const handleTangentLeftChanged = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const tangentType = e.target.value as TangentType
+    setLeftTangent(tangentType)
+  }
+  const handleTangentRightChanged = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const tangentType = e.target.value as TangentType
+    setRightTangent(tangentType)
+  }
+  const handleSelectTangent = () => {
+    setTempValue(
+      tempTransaction,
+      allConnections,
+      preview ?? edit ?? '',
+      leftTangent,
+      rightTangent,
+    )
     return Outcome.Handled
   }
 
@@ -321,7 +361,7 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
   const grid = useUIOptionGrid({
     items: displayedPresets,
     uiColumns: 3,
-    onSelectItem: onSelectEasingOption,
+    onSelectItem: handleSelectEasingOption,
     canVerticleExit(exitSide) {
       if (exitSide === 'top') {
         inputRef.current?.select()
@@ -404,6 +444,28 @@ const CurveEditorPopover: React.VFC<ICurveEditorPopoverProps> = (props) => {
           onCancelCurveChange={onCancelCurveChange}
         />
       </CurveEditorContainer>
+      <span>
+        Left:
+        <select
+          value={props.curveConnection.left.tangentOut}
+          onChange={handleTangentLeftChanged}
+        >
+          <option value="ease">ease</option>
+          <option value="auto">auto</option>
+          <option value="linear">linear</option>
+          <option value="constant">constant</option>
+        </select>
+        Right:
+        <select
+          value={props.curveConnection.right.tangentIn}
+          onChange={handleTangentRightChanged}
+        >
+          <option value="ease">ease</option>
+          <option value="auto">auto</option>
+          <option value="linear">linear</option>
+          <option value="constant">constant</option>
+        </select>
+      </span>
     </Grid>
   )
 }
@@ -414,22 +476,34 @@ function setTempValue(
   tempTransaction: React.MutableRefObject<CommitOrDiscard | null>,
   keyframeConnections: Array<KeyframeConnectionWithAddress>,
   newCurveCssCubicBezier: string,
+  leftTangent: TangentType,
+  rightTangent: TangentType,
 ): void {
   tempTransaction.current?.discard()
   tempTransaction.current = null
 
+  let handlesTransaction: CommitOrDiscard
   const handles = handlesFromCssCubicBezierArgs(newCurveCssCubicBezier)
   if (handles === null) {
-    tempTransaction.current = transactionSetHold(keyframeConnections)
+    handlesTransaction = transactionSetHold(keyframeConnections)
   } else {
-    tempTransaction.current = transactionSetCubicBezier(
-      keyframeConnections,
-      handles,
-    )
+    handlesTransaction = transactionSetCubicBezier(keyframeConnections, handles)
+  }
+  const tangentTransaction = transactionSetTangents(
+    keyframeConnections,
+    leftTangent,
+    rightTangent,
+  )
+
+  const transactions = [handlesTransaction, tangentTransaction]
+
+  tempTransaction.current = {
+    commit: () => transactions.forEach((t) => t.commit()),
+    discard: () => transactions.forEach((t) => t.discard()),
   }
 }
 
-function discardTempValue(
+function discardTempTransaction(
   tempTransaction: React.MutableRefObject<CommitOrDiscard | null>,
 ): void {
   tempTransaction.current?.discard()
@@ -506,6 +580,46 @@ function transactionSetHold(
   })
 }
 
+function transactionSetTangents(
+  keyframeConnections: Array<KeyframeConnectionWithAddress>,
+  tangentLeft: TangentType,
+  tangentRight: TangentType,
+): CommitOrDiscard {
+  return getStudio().tempTransaction(({stateEditors}) => {
+    const {setKeyframe} =
+      stateEditors.coreByProject.historic.sheetsById.sequence
+
+    for (const {
+      projectId,
+      sheetId,
+      objectKey,
+      trackId,
+      left,
+      right,
+    } of keyframeConnections) {
+      setKeyframe({
+        projectId,
+        sheetId,
+        objectKey,
+        trackId,
+        keyframeId: left.id,
+        props: {
+          tangentOut: tangentLeft,
+        },
+      })
+      setKeyframe({
+        projectId,
+        sheetId,
+        objectKey,
+        trackId,
+        keyframeId: right.id,
+        props: {
+          tangentIn: tangentRight,
+        },
+      })
+    }
+  })
+}
 /**
  * n mod m without negative results e.g. `mod(-1,5) = 4` contrasted with `-1 % 5 = -1`.
  *

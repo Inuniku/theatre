@@ -4,10 +4,10 @@ import {useEffect} from 'react'
 import {useState} from 'react'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import {mergeRefs} from 'react-merge-refs'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import useOnClickOutside from '@theatre/studio/uiComponents/useOnClickOutside'
 import useDrag from '@theatre/studio/uiComponents/useDrag'
+import {mergeRefs} from '@theatre/studio/utils/mergeRefs'
 
 const Container = styled.div`
   height: 100%;

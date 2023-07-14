@@ -1,3 +1,4 @@
+import {$} from 'zx'
 /**
  * Builds all the packages for production
  */

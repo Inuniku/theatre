@@ -100,6 +100,9 @@ const propNames = [
   'available',
   'isCollapsed',
   'isVector',
+  'tooltipPlacement',
+  'hasStaticOverride',
+  'enabled',
 ]
 
 const isPropValid = (propName: string) => !propNames.includes(propName)

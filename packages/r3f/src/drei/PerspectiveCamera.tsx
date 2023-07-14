@@ -1,11 +1,11 @@
 import * as React from 'react'
 import type {PerspectiveCamera as PerspectiveCameraImpl, Object3D} from 'three'
 import {useFrame, useThree} from '@react-three/fiber'
-import {mergeRefs} from 'react-merge-refs'
 import {editable} from '../index'
 import {Vector3} from 'three'
 import {editorStore} from '../main/store'
 import type {MutableRefObject} from 'react'
+import {mergeRefs} from '../../../../theatre/studio/src/utils/mergeRefs'
 
 export type PerspectiveCameraProps = Omit<
   JSX.IntrinsicElements['perspectiveCamera'],
