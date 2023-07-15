@@ -65,13 +65,7 @@ import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
 import type SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
 import type {PropTypeConfig} from '@theatre/core/propTypes'
 import {pointableSetUtil} from '@theatre/shared/utils/PointableSet'
-import {
-  eBezTriple_Handle,
-  type BezTriple,
-  eBezTriple_Auto_Type,
-  bezier_handle_calc_smooth_fcurve,
-  eBezTriple_Flag,
-} from '../utils/solveSmoothCurve'
+import {applyAutoTangents} from '@theatre/studio/utils/solveSmoothCurve'
 
 type StudioAhistoricStateProject = NonNullable<
   StudioAhistoricState['projects']['stateByProjectId'][ProjectId]
@@ -1022,6 +1016,12 @@ namespace stateEditors {
             const kf = _getKeyframeById(p)
             if (kf) {
               Object.assign(kf, p.props)
+
+              const t = _getTrack(p)
+              if (t) {
+                applyAutoTangents(t.keyframes)
+              }
+
               // applyAutoTangents(p)
             }
           }
@@ -1073,7 +1073,7 @@ namespace stateEditors {
               'position',
             )
 
-            track.keyframes = sorted
+            track.keyframes = applyAutoTangents(sorted)
           }
         }
 

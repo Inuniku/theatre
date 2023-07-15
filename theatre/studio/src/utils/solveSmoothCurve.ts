@@ -1,22 +1,5 @@
 import assert from 'assert'
-
-/**
- * Keyframes on F-Curves (allows code reuse of Bezier eval code) and
- * Points on Bezier Curves/Paths are generally BezTriples.
- *
- * note #BezTriple.tilt location in struct is abused by Key system.
- *
- * ote vec in BezTriple looks like this:
- * - vec[0][0] = x location of handle 1
- * - vec[0][1] = y location of handle 1
- * - vec[0][2] = z location of handle 1 (not used for FCurve Points(2d))
- * - vec[1][0] = x location of control point
- * - vec[1][1] = y location of control point
- * - vec[1][2] = z location of control point
- * - vec[2][0] = x location of handle 2
- * - vec[2][1] = y location of handle 2
- * - vec[2][2] = z location of handle 2 (not used for FCurve Points(2d))
- */
+import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
 
 function ELEM(v: any, x: any, y: any, z?: any) {
   return v === x || v === y || v === z
@@ -61,6 +44,7 @@ export enum eBezTriple_Handle {
 }
 
 export enum eBezTriple_Flag {
+  ZERO = 0,
   SELECT = 1 << 0,
   BEZT_FLAG_TEMP_TAG = 1 << 1 /* always clear. */,
   /* Can be used to ignore keyframe points for certain operations. */
@@ -92,7 +76,108 @@ const {HD_AUTOTYPE_NORMAL, HD_AUTOTYPE_LOCKED_FINAL} = eBezTriple_Auto_Type
 
 const {FCURVE_EXTRAPOLATE_CONSTANT, FCURVE_EXTRAPOLATE_LINEAR} = eFCurve_Extend
 
-export function BKE_fcurve_handles_recalc(fcu: FCurve) {
+export function applyAutoTangents(keyframes: Keyframe[]) {
+  const bezt: BezTriple[] = keyframes.map((key, i) => {
+    const prevKey: Keyframe = keyframes[i - 1] ?? key
+    const nextKeyframe: Keyframe = keyframes[i + 1] ?? key
+
+    const t1x = lerp(prevKey.position, key.position, key.handles[0])
+    const t1y = lerp(
+      prevKey.value as number,
+      key.value as number,
+      key.handles[1],
+    )
+
+    const px = key.position
+    const py = key.value as number
+
+    const t2x = lerp(key.position, nextKeyframe.position, key.handles[2])
+    const t2y = lerp(
+      key.value as number,
+      nextKeyframe.value as number,
+      key.handles[3],
+    )
+    return {
+      vec: [
+        [t1x, t1y, 0],
+        [px, py, 0],
+        [t2x, t2y, 0],
+      ],
+      h1:
+        key.tangentIn === 'auto'
+          ? eBezTriple_Handle.HD_AUTO_ANIM
+          : eBezTriple_Handle.HD_FREE,
+      h2:
+        key.tangentOut === 'auto'
+          ? eBezTriple_Handle.HD_AUTO_ANIM
+          : eBezTriple_Handle.HD_FREE,
+      auto_handle_type: eBezTriple_Auto_Type.HD_AUTOTYPE_NORMAL,
+      f1: eBezTriple_Flag.ZERO,
+    }
+  })
+
+  const curve: FCurve = {
+    bezt,
+    totvert: bezt.length,
+    auto_smoothing: eFCurve_Smoothing.FCURVE_SMOOTH_CONT_ACCEL,
+    extend: eFCurve_Extend.FCURVE_EXTRAPOLATE_CONSTANT,
+  }
+
+  BKE_fcurve_handles_recalc(curve)
+
+  const result: Keyframe[] = []
+
+  for (let i = 0; i < keyframes.length; i++) {
+    const key: Keyframe = {
+      ...keyframes[i],
+      handles: keyframes[i].handles.map((handle) => handle) as [
+        number,
+        number,
+        number,
+        number,
+      ],
+    }
+    const prevKey: Keyframe = keyframes[i - 1]
+    const nextKeyframe: Keyframe = keyframes[i + 1]
+
+    const bezier = bezt[i]
+
+    if (prevKey) {
+      const h1 = ilerp(prevKey.position, key.position, bezier.vec[0][0])
+      const h2 = ilerp(
+        prevKey.value as number,
+        key.value as number,
+        bezier.vec[0][1],
+      )
+      key.handles[0] = h1
+      key.handles[1] = h2
+    }
+
+    if (nextKeyframe) {
+      const h3 = ilerp(key.position, nextKeyframe.position, bezier.vec[2][0])
+      const h4 = ilerp(
+        key.value as number,
+        nextKeyframe.value as number,
+        bezier.vec[2][1],
+      )
+
+      key.handles[2] = h3
+      key.handles[3] = h4
+    }
+    result.push(key)
+  }
+  return result
+}
+
+function lerp(a: number, b: number, t: number) {
+  return (1 - t) * a + b * t
+}
+
+function ilerp(a: number, b: number, c: number) {
+  return (a - c) / (a - b)
+}
+
+function BKE_fcurve_handles_recalc(fcu: FCurve) {
   BKE_fcurve_handles_recalc_ex(fcu, eBezTriple_Flag.SELECT)
 }
 
@@ -296,7 +381,7 @@ function BKE_nurb_handle_smooth_fcurve(
   }
 }
 
-export function bezier_handle_calc_smooth_fcurve(
+function bezier_handle_calc_smooth_fcurve(
   bezt: BezTriple[],
   total: number,
   start: number,
