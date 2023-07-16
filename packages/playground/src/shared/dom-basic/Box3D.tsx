@@ -24,7 +24,7 @@ const Box3DTextCSS: CSSProperties = {
   width: '100%',
 }
 
-export const Box3D: React.FCWithChildren<{
+export const Box3D: React.FC<{
   sheet: ISheet
   name: string
   x: number

@@ -59,6 +59,8 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, OrbitControlsProps>(
     })
 
     useEffect(() => {
+      if (!explDomElement) return
+
       const callback = (e: Event) => {
         invalidate()
         if (regress) performance.regress()

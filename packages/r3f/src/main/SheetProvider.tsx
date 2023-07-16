@@ -25,7 +25,7 @@ export const useCurrentSheet = (): ISheet | undefined => {
   return useWrapperContext().sheet
 }
 
-const SheetProvider: React.FCWithChildren<{
+const SheetProvider: React.FC<{
   sheet: ISheet
   children: ReactNode
 }> = ({sheet, children}) => {

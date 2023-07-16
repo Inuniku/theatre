@@ -24,7 +24,7 @@ const Wrapper = styled.div`
   align-items: center;
 `
 
-const ImageTypeExample: React.FCWithChildren<{}> = (props) => {
+const ImageTypeExample: React.FC<{}> = () => {
   const [imageUrl, setImageUrl] = useState<string>()
 
   useEffect(() => {

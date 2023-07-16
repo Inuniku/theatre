@@ -8,7 +8,7 @@ export const useCurrentRafDriver = (): IRafDriver | undefined => {
   return useContext(ctx)?.rafDriver
 }
 
-const RafDriverProvider: React.FCWithChildren<{
+const RafDriverProvider: React.FC<{
   driver: IRafDriver
   children: ReactNode
 }> = ({driver, children}) => {

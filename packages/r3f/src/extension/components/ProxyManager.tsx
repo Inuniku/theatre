@@ -1,9 +1,7 @@
-import type {VFC} from 'react'
 import React, {useLayoutEffect, useMemo, useRef, useState} from 'react'
 import type {Editable} from '../../main/store'
 import {createPortal} from '@react-three/fiber'
 import EditableProxy from './EditableProxy'
-import type {OrbitControls} from 'three-stdlib'
 import TransformControls from './TransformControls'
 import shallow from 'zustand/shallow'
 import type {Material, Mesh, Object3D} from 'three'
@@ -14,9 +12,10 @@ import {useSelected} from './useSelected'
 import {useVal} from '@theatre/react'
 import {getEditorSheetObject} from '../editorStuff'
 import useExtensionStore from '../useExtensionStore'
+import type {OrbitControlsImpl} from './OrbitControls'
 
 export interface ProxyManagerProps {
-  orbitControlsRef: React.MutableRefObject<OrbitControls | null>
+  orbitControlsRef: React.MutableRefObject<OrbitControlsImpl | null>
 }
 
 type IEditableProxy<T> = {
@@ -25,7 +24,7 @@ type IEditableProxy<T> = {
   editable: Editable<T>
 }
 
-const ProxyManager: VFC<ProxyManagerProps> = ({orbitControlsRef}) => {
+const ProxyManager: React.FC<ProxyManagerProps> = ({orbitControlsRef}) => {
   const isBeingEdited = useRef(false)
   const editorObject = getEditorSheetObject()
   const [sceneSnapshot, editables] = useExtensionStore(
@@ -42,11 +41,9 @@ const ProxyManager: VFC<ProxyManagerProps> = ({orbitControlsRef}) => {
     useVal(editorObject?.props.viewport.shading) ?? 'rendered'
 
   const sceneProxy = useMemo(() => sceneSnapshot?.clone(), [sceneSnapshot])
-  const [editableProxies, setEditableProxies] = useState<
-    {
-      [name in string]?: IEditableProxy<any>
-    }
-  >({})
+  const [editableProxies, setEditableProxies] = useState<{
+    [name in string]?: IEditableProxy<any>
+  }>({})
 
   // set up scene proxies
   useLayoutEffect(() => {

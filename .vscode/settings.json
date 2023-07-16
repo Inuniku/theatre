@@ -26,13 +26,18 @@
     "dataverse",
     "drei",
     "easings",
+    "editables",
+    "expl",
     "fcurve",
     "lerp",
     "noaccel",
+    "Phong",
     "recalc",
     "theatrejs",
     "threejs",
     "toolset",
-    "trackdata"
+    "trackdata",
+    "wireframe",
+    "zustand"
   ]
 }

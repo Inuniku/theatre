@@ -16,7 +16,7 @@ import {refreshSnapshot} from './utils'
  * </Suspense>
  * ```
  */
-const RefreshSnapshot: React.FCWithChildren<{}> = () => {
+const RefreshSnapshot: React.FC<{}> = () => {
   useEffect(() => {
     setTimeout(() => {
       refreshSnapshot()

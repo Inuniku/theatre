@@ -1,3 +1,4 @@
+import {$, argv} from 'zx'
 /**
  * The release script. This must be called with zx from the repo's root.
  * Example:

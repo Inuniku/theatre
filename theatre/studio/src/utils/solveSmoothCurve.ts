@@ -177,7 +177,7 @@ function ilerp(a: number, b: number, c: number) {
   return (a - c) / (a - b)
 }
 
-function BKE_fcurve_handles_recalc(fcu: FCurve) {
+export function BKE_fcurve_handles_recalc(fcu: FCurve) {
   BKE_fcurve_handles_recalc_ex(fcu, eBezTriple_Flag.SELECT)
 }
 

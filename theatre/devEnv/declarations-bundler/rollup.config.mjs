@@ -1,6 +1,10 @@
 import alias from '@rollup/plugin-alias'
 import path from 'path'
 import dts from 'rollup-plugin-dts'
+import {fileURLToPath} from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const fromPrivatePackage = (s) => path.join(__dirname, '../..', s)
 

@@ -1,3 +1,4 @@
+import {$, fs} from 'zx'
 /**
  * This script publishes the insider packages from the CI. You can't run it locally unless you have a a valid npm access token and you store its value in the `NPM_TOKEN` environmental variable.
  */

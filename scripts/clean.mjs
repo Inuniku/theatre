@@ -1,3 +1,4 @@
+import {$} from 'zx'
 /**
  * cleans the build artifacts of all packages
  */

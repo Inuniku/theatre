@@ -3,7 +3,7 @@ import React from 'react'
 import {Canvas, useThree} from '@react-three/fiber'
 import type {BaseSheetObjectType} from '../../main/store'
 import {__private_allRegisteredObjects as allRegisteredObjects} from '@theatre/r3f'
-import shallow from 'zustand/shallow'
+import {shallow} from 'zustand/shallow'
 import root from 'react-shadow/styled-components'
 import ProxyManager from './ProxyManager'
 import studio from '@theatre/studio'
@@ -37,7 +37,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-const EditorScene: React.FCWithChildren<{
+const EditorScene: React.FC<{
   snapshotEditorSheet: ISheet
   paneId: string
 }> = ({snapshotEditorSheet, paneId}) => {
@@ -58,7 +58,7 @@ const EditorScene: React.FCWithChildren<{
 
   useEffect(() => {
     if (gl && scene && camera) {
-      gl.physicallyCorrectLights = viewportLighting === 'physical'
+      gl.useLegacyLights = viewportLighting !== 'physical'
       gl.compile(scene, camera)
     }
   }, [gl, viewportLighting, scene, camera])
@@ -143,8 +143,9 @@ const WaitForSceneInitMessage = styled.div<{active?: boolean}>`
     background-color: rgba(40, 43, 47, 0.95);
   }
 `
+type SnapshotEditorProps = {paneId: string}
 
-const SnapshotEditor: React.FCWithChildren<{paneId: string}> = (props) => {
+const SnapshotEditor = (props: SnapshotEditorProps) => {
   const snapshotEditorSheet = getEditorSheet()
   const paneId = props.paneId
   const editorObject = getEditorSheetObject()

@@ -13,7 +13,7 @@ const globalConfig = {
   },
 }
 
-export const Scene: React.FCWithChildren<{project: IProject}> = ({project}) => {
+export const Scene: React.FC<{project: IProject}> = ({project}) => {
   // This is cheap to call and always returns the same value, so no need for useMemo()
   const sheet = project.sheet('Scene', 'default')
   const containerRef = useRef<HTMLDivElement>(null!)
