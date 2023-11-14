@@ -1,8 +1,9 @@
 import type Project from '@theatre/core/projects/Project'
 import type Sheet from '@theatre/core/sheets/Sheet'
-import type {SequenceAddress} from '@theatre/shared/utils/addresses'
-import didYouMean from '@theatre/shared/utils/didYouMean'
-import {InvalidArgumentError} from '@theatre/shared/utils/errors'
+import {encodePathToProp} from '@theatre/utils/pathToProp'
+import type {SequenceAddress} from '@theatre/sync-server/state/types'
+import didYouMean from '@theatre/utils/didYouMean'
+import {InvalidArgumentError} from '@theatre/utils/errors'
 import type {
   Prism,
   Pointer,
@@ -20,10 +21,13 @@ import type {
 } from './playbackControllers/DefaultPlaybackController'
 import DefaultPlaybackController from './playbackControllers/DefaultPlaybackController'
 import TheatreSequence from './TheatreSequence'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import type {ILogger} from '@theatre/shared/logger'
 import type {ISequence} from '..'
 import {notify} from '@theatre/shared/notify'
 import type {$IntentionalAny} from '@theatre/dataverse/src/types'
+import {isSheetObject} from '@theatre/shared/instanceTypes'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 export type IPlaybackRange = [from: number, to: number]
 
@@ -112,6 +116,46 @@ export default class Sequence implements PointerToPrismProvider {
     } else {
       return prism(() => undefined) as $IntentionalAny as Prism<V>
     }
+  }
+
+  /**
+   * Takes a pointer to a property of a SheetObject and returns the keyframes of that property.
+   *
+   * Theoretically, this method can be called from inside a prism so it can be reactive.
+   */
+  getKeyframesOfSimpleProp<V>(prop: Pointer<any>): Keyframe[] {
+    const {path, root} = getPointerParts(prop)
+
+    if (!isSheetObject(root)) {
+      throw new InvalidArgumentError(
+        'Argument prop must be a pointer to a SheetObject property',
+      )
+    }
+
+    const trackP = val(
+      this._project.pointers.historic.sheetsById[this._sheet.address.sheetId]
+        .sequence.tracksByObject[root.address.objectKey],
+    )
+
+    if (!trackP) {
+      return []
+    }
+
+    const {trackData, trackIdByPropPath} = trackP
+    const objectAddress = encodePathToProp(path)
+    const id = trackIdByPropPath[objectAddress]
+
+    if (!id) {
+      return []
+    }
+
+    const track = trackData[id]
+
+    if (!track) {
+      return []
+    }
+
+    return keyframeUtils.getSortedKeyframesCached(track.keyframes)
   }
 
   get positionFormatter(): ISequencePositionFormatter {

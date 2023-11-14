@@ -1,27 +1,37 @@
 import type {IProject, IRafDriver, ISheet, ISheetObject} from '@theatre/core'
 import type {Prism, Pointer} from '@theatre/dataverse'
-import {prism} from '@theatre/dataverse'
-import SimpleCache from '@theatre/shared/utils/SimpleCache'
-import type {$IntentionalAny, VoidFn} from '@theatre/shared/utils/types'
+import {getPointerParts, prism} from '@theatre/dataverse'
+import SimpleCache from '@theatre/utils/SimpleCache'
+import type {$IntentionalAny, VoidFn} from '@theatre/utils/types'
 import type {IScrub} from '@theatre/studio/Scrub'
 import type {Studio} from '@theatre/studio/Studio'
 import {
+  isProject,
+  isSheet,
+  isSheetObject,
   isSheetObjectPublicAPI,
+  isSheetObjectTemplate,
   isSheetPublicAPI,
+  isSheetTemplate,
 } from '@theatre/shared/instanceTypes'
-import {getOutlineSelection} from './selectors'
+import {outlineSelection} from './selectors'
 import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
 import getStudio from './getStudio'
-import {debounce} from 'lodash-es'
+import {debounce, uniq} from 'lodash-es'
 import type Sheet from '@theatre/core/sheets/Sheet'
-import type {PaneInstanceId, ProjectId} from '@theatre/shared/utils/ids'
+import type {ProjectId} from '@theatre/sync-server/state/types/core'
 import {
-  __experimental_disblePlayPauseKeyboardShortcut,
+  __experimental_disablePlayPauseKeyboardShortcut,
   __experimental_enablePlayPauseKeyboardShortcut,
 } from './UIRoot/useKeyboardShortcuts'
 import type TheatreSheetObject from '@theatre/core/sheetObjects/TheatreSheetObject'
 import type TheatreSheet from '@theatre/core/sheets/TheatreSheet'
 import type {__UNSTABLE_Project_OnDiskState} from '@theatre/core'
+import type {OutlineSelectionState} from '@theatre/sync-server/src/state/types/studio'
+import type Project from '@theatre/core/projects/Project'
+import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
+import type SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
+import type {PaneInstanceId} from '@theatre/sync-server/state/types'
 
 export interface ITransactionAPI {
   /**
@@ -78,6 +88,13 @@ export interface ITransactionAPI {
    * Makes Theatre forget about this sheet.
    */
   __experimental_forgetSheet(sheet: TheatreSheet): void
+
+  /**
+   * EXPERIMENTAL API - this api may be removed without notice.
+   *
+   * Sequences a track for the
+   */
+  __experimental_sequenceProp<V>(pointer: Pointer<V>): void
 }
 /**
  *
@@ -218,6 +235,8 @@ export interface _StudioInitializeOpts {
   usePersistentStorage?: boolean
 
   __experimental_rafDriver?: IRafDriver | undefined
+
+  serverUrl?: string | undefined
 }
 
 /**
@@ -374,6 +393,21 @@ export interface IStudio {
      * The extension's definition
      */
     extension: IExtension,
+    opts?: {
+      /**
+       * Whether to reconfigure the extension. This is useful if you're
+       * hot-reloading the extension.
+       *
+       * Mind you, that if the old version of the extension defines a pane,
+       * and the new version doesn't, all instances of that pane will disappear, as expected.
+       * _However_, if you again reconfigure the extension with the old version, the instances
+       * of the pane that pane will re-appear.
+       *
+       * We're not sure about whether this behavior makes sense or not. If not, let us know
+       * in the discord server or open an issue on github.
+       */
+      __experimental_reconfigure?: boolean
+    },
   ): void
 
   /**
@@ -384,6 +418,13 @@ export interface IStudio {
   createPane<PaneClass extends string>(
     paneClass: PaneClass,
   ): PaneInstance<PaneClass>
+
+  /**
+   * Destroys a previously created pane instance
+   *
+   * @param paneId - The unique identifier for the pane instance, provided in the 'mount' callback
+   */
+  destroyPane(paneId: string): void
 
   /**
    * Returns the Theatre.js project that contains the studio's sheets and objects.
@@ -420,7 +461,7 @@ export interface IStudio {
      * Disables the play/pause keyboard shortcut (spacebar)
      * Also see `__experimental_enablePlayPauseKeyboardShortcut()` to re-enable it.
      */
-    __experimental_disblePlayPauseKeyboardShortcut(): void
+    __experimental_disablePlayPauseKeyboardShortcut(): void
     /**
      * Warning: This is an experimental API and will change in the future.
      *
@@ -472,16 +513,16 @@ export default class TheatreStudio implements IStudio {
   private readonly _cache = new SimpleCache()
 
   __experimental = {
-    __experimental_disblePlayPauseKeyboardShortcut(): void {
+    __experimental_disablePlayPauseKeyboardShortcut(): void {
       // This is an experimental API to respond to this issue: https://discord.com/channels/870988717190426644/870988717190426647/1067906775602430062
       // Ideally we need a coherent way for the user to control keyboard inputs, so we will remove this method in the future.
       // Here is the procedure for removing it:
       // 1. Replace this code with a `throw new Error("This is experimental method is now deprecated, and here is how to migrate: ...")`
       // 2. Then keep it for a few months, and then remove it.
-      __experimental_disblePlayPauseKeyboardShortcut()
+      __experimental_disablePlayPauseKeyboardShortcut()
     },
     __experimental_enablePlayPauseKeyboardShortcut(): void {
-      // see __experimental_disblePlayPauseKeyboardShortcut()
+      // see __experimental_disablePlayPauseKeyboardShortcut()
       __experimental_enablePlayPauseKeyboardShortcut()
     },
     __experimental_clearPersistentStorage(persistenceKey?: string): void {
@@ -504,12 +545,15 @@ export default class TheatreStudio implements IStudio {
     return studio.initialize(opts)
   }
 
-  extend(extension: IExtension): void {
-    getStudio().extend(extension)
+  extend(
+    extension: IExtension,
+    opts?: {__experimental_reconfigure?: boolean},
+  ): void {
+    getStudio().extend(extension, opts)
   }
 
-  transaction(fn: (api: ITransactionAPI) => void): void {
-    return getStudio().transaction(({set, unset, stateEditors}) => {
+  transaction(fn: (api: ITransactionAPI) => void) {
+    getStudio().transaction(({set, unset, stateEditors}) => {
       const __experimental_forgetObject = (object: TheatreSheetObject) => {
         if (!isSheetObjectPublicAPI(object)) {
           throw new Error(
@@ -534,11 +578,28 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
+      const __experimental_sequenceProp = <V>(prop: Pointer<V>) => {
+        const {path, root} = getPointerParts(prop)
+
+        if (!isSheetObject(root)) {
+          throw new Error(
+            'Argument prop must be a pointer to a SheetObject property',
+          )
+        }
+
+        const propAdress = {...root.address, pathToProp: path}
+
+        stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsSequenced(
+          propAdress,
+        )
+      }
+
       return fn({
         set,
         unset,
         __experimental_forgetObject,
         __experimental_forgetSheet,
+        __experimental_sequenceProp,
       })
     })
   }
@@ -546,7 +607,8 @@ export default class TheatreStudio implements IStudio {
   private _getSelectionPrism(): Prism<(ISheetObject | ISheet)[]> {
     return this._cache.get('_getSelectionPrism()', () =>
       prism((): (ISheetObject | ISheet)[] => {
-        return getOutlineSelection()
+        return outlineSelection
+          .getValue()
           .filter(
             (s): s is SheetObject | Sheet =>
               s.type === 'Theatre_SheetObject' || s.type === 'Theatre_Sheet',
@@ -561,13 +623,42 @@ export default class TheatreStudio implements IStudio {
   }
 
   setSelection(selection: Array<ISheetObject | ISheet>): void {
-    const sanitizedSelection = [...selection]
+    const sanitizedSelection: Array<
+      Project | Sheet | SheetObject | SheetTemplate | SheetObjectTemplate
+    > = [...selection]
       .filter((s) => isSheetObjectPublicAPI(s) || isSheetPublicAPI(s))
       .map((s) => getStudio().corePrivateAPI!(s))
 
     getStudio().transaction(({stateEditors}) => {
+      const newSelectionState: OutlineSelectionState[] = []
+
+      for (const item of uniq(sanitizedSelection)) {
+        if (isProject(item)) {
+          newSelectionState.push({type: 'Project', ...item.address})
+        } else if (isSheet(item)) {
+          newSelectionState.push({
+            type: 'Sheet',
+            ...item.template.address,
+          })
+          stateEditors.studio.historic.projects.stateByProjectId.stateBySheetId.setSelectedInstanceId(
+            item.address,
+          )
+        } else if (isSheetTemplate(item)) {
+          newSelectionState.push({type: 'Sheet', ...item.address})
+        } else if (isSheetObject(item)) {
+          newSelectionState.push({
+            type: 'SheetObject',
+            ...item.template.address,
+          })
+          stateEditors.studio.historic.projects.stateByProjectId.stateBySheetId.setSelectedInstanceId(
+            item.sheet.address,
+          )
+        } else if (isSheetObjectTemplate(item)) {
+          newSelectionState.push({type: 'SheetObject', ...item.address})
+        }
+      }
       stateEditors.studio.historic.panels.outline.selection.set(
-        sanitizedSelection,
+        newSelectionState,
       )
     })
   }

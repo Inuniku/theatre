@@ -1,5 +1,5 @@
 import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscard} from '@theatre/studio/StudioStore/StudioStore'
+import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
 import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
 import useDrag from '@theatre/studio/uiComponents/useDrag'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
@@ -11,7 +11,7 @@ import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
 import CurveEditorPopover, {
   isConnectionEditingInCurvePopover,
 } from './CurveEditorPopover/CurveEditorPopover'
-import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
 import type {IConnectorThemeValues} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
 import {ConnectorLine} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
@@ -22,12 +22,15 @@ import {copyableKeyframesFromSelection} from '@theatre/studio/panels/SequenceEdi
 import {selectedKeyframeConnections} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
 
 import styled from 'styled-components'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 const POPOVER_MARGIN = 5
 
 const EasingPopover = styled(BasicPopover)`
   --popover-outer-stroke: transparent;
   --popover-inner-stroke: ${COLOR_POPOVER_BACK};
+  border-radius: 2px;
+  padding: 0;
 `
 
 type IBasicKeyframeConnectorProps = ISingleKeyframeEditorProps
@@ -36,8 +39,12 @@ const BasicKeyframeConnector: React.VFC<IBasicKeyframeConnectorProps> = (
   props,
 ) => {
   const {index, track} = props
-  const cur = track.data.keyframes[index]
-  const next = track.data.keyframes[index + 1]
+  const cur = keyframeUtils.getSortedKeyframesCached(track.data.keyframes)[
+    index
+  ]
+  const next = keyframeUtils.getSortedKeyframesCached(track.data.keyframes)[
+    index + 1
+  ]
 
   const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)
 
@@ -108,8 +115,10 @@ const SingleCurveEditorPopover: React.FC<
     track: {data: trackData},
     selection,
   } = props
-  const cur = trackData.keyframes[index]
-  const next = trackData.keyframes[index + 1]
+  const cur = keyframeUtils.getSortedKeyframesCached(trackData.keyframes)[index]
+  const next = keyframeUtils.getSortedKeyframesCached(trackData.keyframes)[
+    index + 1
+  ]
 
   const trackId = props.leaf.trackId
   const address = props.leaf.sheetObject.address
@@ -159,7 +168,7 @@ function useDragKeyframe(
       lockCSSCursorTo: 'ew-resize',
       onDragStart(event) {
         const props = propsRef.current
-        let tempTransaction: CommitOrDiscard | undefined
+        let tempTransaction: CommitOrDiscardOrRecapture | undefined
 
         if (props.selection) {
           const {selection, leaf} = props
@@ -168,8 +177,9 @@ function useDragKeyframe(
             .getDragHandlers({
               ...sheetObject.address,
               domNode: node!,
-              positionAtStartOfDrag:
-                props.track.data.keyframes[props.index].position,
+              positionAtStartOfDrag: keyframeUtils.getSortedKeyframesCached(
+                props.track.data.keyframes,
+              )[props.index].position,
             })
             .onDragStart(event)
         }
@@ -195,9 +205,9 @@ function useDragKeyframe(
                   trackId: propsAtStartOfDrag.leaf.trackId,
                   keyframeIds: [
                     propsAtStartOfDrag.keyframe.id,
-                    propsAtStartOfDrag.track.data.keyframes[
-                      propsAtStartOfDrag.index + 1
-                    ].id,
+                    keyframeUtils.getSortedKeyframesCached(
+                      propsAtStartOfDrag.track.data.keyframes,
+                    )[propsAtStartOfDrag.index + 1].id,
                   ],
                   translate: delta,
                   scale: 1,
@@ -245,6 +255,7 @@ function useConnectorContextMenu(
 
       return [
         {
+          type: 'normal',
           label: copyableKeyframes.length > 0 ? 'Copy (selection)' : 'Copy',
           callback: () => {
             if (copyableKeyframes.length > 0) {
@@ -264,6 +275,7 @@ function useConnectorContextMenu(
           },
         },
         {
+          type: 'normal',
           label: props.selection ? 'Delete (selection)' : 'Delete',
           callback: () => {
             if (props.selection) {

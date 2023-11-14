@@ -1,12 +1,8 @@
 import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
 import getStudio from '@theatre/studio/getStudio'
-import type {IContextMenuItem} from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import getDeep from '@theatre/shared/utils/getDeep'
+import getDeep from '@theatre/utils/getDeep'
 import {usePrism} from '@theatre/react'
-import type {
-  $IntentionalAny,
-  SerializablePrimitive,
-} from '@theatre/shared/utils/types'
+import type {$IntentionalAny, SerializablePrimitive} from '@theatre/utils/types'
 import {getPointerParts, prism, val} from '@theatre/dataverse'
 import type {Pointer} from '@theatre/dataverse'
 import get from 'lodash-es/get'
@@ -18,19 +14,20 @@ import {
   isPropConfigComposite,
   iteratePropType,
 } from '@theatre/shared/propTypes/utils'
-import type {SequenceTrackId} from '@theatre/shared/utils/ids'
-import {createStudioSheetItemKey} from '@theatre/shared/utils/ids'
+import type {SequenceTrackId} from '@theatre/sync-server/state/types/core'
 import type {IPropPathToTrackIdTree} from '@theatre/core/sheetObjects/SheetObjectTemplate'
-import pointerDeep from '@theatre/shared/utils/pointerDeep'
+import pointerDeep from '@theatre/utils/pointerDeep'
 import type {NearbyKeyframesControls} from './NextPrevKeyframeCursors'
 import NextPrevKeyframeCursors from './NextPrevKeyframeCursors'
 import {getNearbyKeyframesOfTrack} from './getNearbyKeyframesOfTrack'
 import type {KeyframeWithTrack} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
 import {emptyObject} from '@theatre/shared/utils'
+import {createStudioSheetItemKey} from '@theatre/shared/utils/ids'
+import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
 
 interface CommonStuff {
   beingScrubbed: boolean
-  contextMenuItems: Array<IContextMenuItem>
+  contextMenuItems: Array<ContextMenuItem>
   controlIndicators: React.ReactElement
 }
 
@@ -65,7 +62,12 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
         beingScrubbed: false,
         contextMenuItems: [],
         controlIndicators: (
-          <DefaultOrStaticValueIndicator hasStaticOverride={false} />
+          <DefaultOrStaticValueIndicator
+            hasStaticOverride={false}
+            obj={obj}
+            pathToProp={pathToProp}
+            propConfig={propConfig}
+          />
         ),
       }
     }
@@ -85,7 +87,7 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
       ),
     )
 
-    const contextMenuItems: IContextMenuItem[] = []
+    const contextMenuItems: ContextMenuItem[] = []
 
     const common: CommonStuff = {
       beingScrubbed: someDescendantsBeingScrubbed,
@@ -134,6 +136,7 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
 
     if (hasStatics || hasOneOrMoreSequencedTracks) {
       contextMenuItems.push({
+        type: 'normal',
         label: 'Reset all to default',
         callback: () => {
           getStudio()!.transaction(({unset}) => {
@@ -145,6 +148,7 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
 
     if (hasOneOrMoreSequencedTracks) {
       contextMenuItems.push({
+        type: 'normal',
         label: 'Make all static',
         callback: () => {
           getStudio()!.transaction(({stateEditors}) => {
@@ -176,6 +180,7 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
       (hasOneOrMoreSequencedTracks && hasStatics)
     ) {
       contextMenuItems.push({
+        type: 'normal',
         label: 'Sequence all',
         callback: () => {
           getStudio()!.transaction(({stateEditors}) => {
@@ -188,7 +193,6 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
 
               stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsSequenced(
                 propAddress,
-                propConfig,
               )
             }
           })
@@ -224,7 +228,12 @@ export function useEditingToolsForCompoundProp<T extends SerializablePrimitive>(
         ...common,
         type: 'AllStatic',
         controlIndicators: (
-          <DefaultOrStaticValueIndicator hasStaticOverride={hasStatics} />
+          <DefaultOrStaticValueIndicator
+            hasStaticOverride={hasStatics}
+            obj={obj}
+            pathToProp={pathToProp}
+            propConfig={propConfig}
+          />
         ),
       }
     }

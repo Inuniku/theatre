@@ -1,5 +1,5 @@
 import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscard} from '@theatre/studio/StudioStore/StudioStore'
+import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
 import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
 import useDrag from '@theatre/studio/uiComponents/useDrag'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
@@ -7,7 +7,7 @@ import {val} from '@theatre/dataverse'
 import React, {useMemo, useRef, useState} from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
-import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {includeLockFrameStampAttrs} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
@@ -20,6 +20,7 @@ import {useKeyframeInlineEditorPopover} from '@theatre/studio/panels/SequenceEdi
 import usePresence, {
   PresenceFlag,
 } from '@theatre/studio/uiComponents/usePresence'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 export const dotSize = 6
 
@@ -62,7 +63,10 @@ const GraphEditorDotScalar: React.VFC<IProps> = (props) => {
   const [ref, node] = useRefAndState<SVGCircleElement | null>(null)
 
   const {index, trackData} = props
-  const cur = trackData.keyframes[index]
+  const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
+    trackData.keyframes,
+  )
+  const cur = sortedKeyframes[index]
 
   const [contextMenu] = useKeyframeContextMenu(node, props)
   const presence = usePresence(props.itemKey)
@@ -149,12 +153,14 @@ function useDragKeyframe(options: {
           propsAtStartOfDrag.layoutP.graphEditorVerticalSpace.toExtremumSpace,
         )
         const unlockExtremums = propsAtStartOfDrag.extremumSpace.lock()
-        let tempTransaction: CommitOrDiscard | undefined
+        let tempTransaction: CommitOrDiscardOrRecapture | undefined
 
         return {
           onDrag(dx, dy) {
-            const original =
-              propsAtStartOfDrag.trackData.keyframes[propsAtStartOfDrag.index]
+            const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
+              propsAtStartOfDrag.trackData.keyframes,
+            )
+            const original = sortedKeyframes[propsAtStartOfDrag.index]
 
             const deltaPos = toUnitSpace(dx)
             const dyInVerticalSpace = -dy
@@ -177,10 +183,10 @@ function useDragKeyframe(options: {
             updatedKeyframes.push(cur)
 
             if (keepSpeeds) {
-              const prev =
-                propsAtStartOfDrag.trackData.keyframes[
-                  propsAtStartOfDrag.index - 1
-                ]
+              const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
+                propsAtStartOfDrag.trackData.keyframes,
+              )
+              const prev = sortedKeyframes[propsAtStartOfDrag.index - 1]
 
               if (
                 prev &&
@@ -200,10 +206,8 @@ function useDragKeyframe(options: {
                   cur.value as number,
                 )
               }
-              const next =
-                propsAtStartOfDrag.trackData.keyframes[
-                  propsAtStartOfDrag.index + 1
-                ]
+
+              const next = sortedKeyframes[propsAtStartOfDrag.index + 1]
 
               if (
                 next &&
@@ -264,6 +268,7 @@ function useKeyframeContextMenu(node: SVGCircleElement | null, props: IProps) {
     menuItems: () => {
       return [
         {
+          type: 'normal',
           label: 'Delete',
           callback: () => {
             getStudio()!.transaction(({stateEditors}) => {

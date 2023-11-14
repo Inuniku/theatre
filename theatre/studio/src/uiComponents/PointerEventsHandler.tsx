@@ -1,6 +1,7 @@
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import type {$IntentionalAny} from '@theatre/utils/types'
 import React, {
   createContext,
+  forwardRef,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -48,7 +49,8 @@ const context = createContext<Context>({} as $IntentionalAny)
 
 const PointerEventsHandler: React.FC<{
   className?: string
-}> = (props) => {
+  children?: React.ReactNode
+}> = forwardRef((props, ref) => {
   const [locks, setLocks] = useState<Lock[]>([])
   const contextValue = useMemo<Context>(() => {
     const getLock = (className: string, cursor?: string) => {
@@ -70,6 +72,7 @@ const PointerEventsHandler: React.FC<{
       <Container
         id={elementId}
         className={(locks[0]?.className ?? 'normal') + ' ' + props.className}
+        ref={ref as $IntentionalAny}
       >
         <CursorOverride
           style={{
@@ -83,7 +86,7 @@ const PointerEventsHandler: React.FC<{
       </Container>
     </context.Provider>
   )
-}
+})
 
 /**
  * A "locking" mechanism for managing style.cursor values.

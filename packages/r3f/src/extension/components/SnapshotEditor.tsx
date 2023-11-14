@@ -2,6 +2,7 @@ import {useCallback, useEffect, useLayoutEffect, useMemo, useState} from 'react'
 import React from 'react'
 import {Canvas, useThree} from '@react-three/fiber'
 import type {BaseSheetObjectType} from '../../main/store'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {__private_allRegisteredObjects as allRegisteredObjects} from '@theatre/r3f'
 import shallow from 'zustand/shallow'
 import root from 'react-shadow/styled-components'
@@ -12,7 +13,7 @@ import styled, {createGlobalStyle, StyleSheetManager} from 'styled-components'
 import type {ISheet} from '@theatre/core'
 import useSnapshotEditorCamera from './useSnapshotEditorCamera'
 import {getEditorSheet, getEditorSheetObject} from '../editorStuff'
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import type {$IntentionalAny} from '../../types'
 import {InfiniteGridHelper} from '../InfiniteGridHelper'
 import {DragDetectorProvider} from './DragDetector'
 import ReferenceWindow from './ReferenceWindow/ReferenceWindow'
@@ -53,16 +54,6 @@ const EditorScene: React.FC<{snapshotEditorSheet: ISheet; paneId: string}> = ({
 
   const editorObject = getEditorSheetObject()
 
-  const viewportLighting =
-    useVal(editorObject?.props.viewport.lighting) ?? 'physical'
-
-  useEffect(() => {
-    if (gl && scene && camera) {
-      gl.physicallyCorrectLights = viewportLighting === 'physical'
-      gl.compile(scene, camera)
-    }
-  }, [gl, viewportLighting, scene, camera])
-
   const helpersRoot = useExtensionStore((state) => state.helpersRoot, shallow)
 
   const showGrid = useVal(editorObject?.props.viewport.showGrid) ?? true
@@ -78,7 +69,7 @@ const EditorScene: React.FC<{snapshotEditorSheet: ISheet; paneId: string}> = ({
 
       <primitive object={helpersRoot}></primitive>
       <ProxyManager orbitControlsRef={orbitControlsRef} />
-      <color attach="background" args={[0.24, 0.24, 0.24]} />
+      <color attach="background" args={[0.1, 0.1, 0.1]} />
     </DragDetectorProvider>
   )
 }

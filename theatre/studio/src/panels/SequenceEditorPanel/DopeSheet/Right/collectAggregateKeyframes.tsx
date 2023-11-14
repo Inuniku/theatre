@@ -6,18 +6,14 @@ import type {
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
 } from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {
-  SequenceTrackId,
-  StudioSheetItemKey,
-} from '@theatre/shared/utils/ids'
-import {createStudioSheetItemKey} from '@theatre/shared/utils/ids'
-import type {
-  Keyframe,
-  TrackData,
-} from '@theatre/core/projects/store/types/SheetState_Historic'
-import {encodePathToProp} from '@theatre/shared/utils/addresses'
+import type {SequenceTrackId} from '@theatre/sync-server/state/types/core'
+import type {Keyframe, TrackData} from '@theatre/sync-server/state/types/core'
+import {encodePathToProp} from '@theatre/utils/pathToProp'
 import {uniq} from 'lodash-es'
 import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
+import type {StudioSheetItemKey} from '@theatre/sync-server/state/types'
+import {createStudioSheetItemKey} from '@theatre/shared/utils/ids'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 /**
  * An index over a series of keyframes that have been collected from different tracks.
@@ -82,7 +78,10 @@ function keyframesByPositionFromTrackWithIds(tracks: TrackWithId[]) {
   const byPosition = new Map<number, KeyframeWithTrack[]>()
 
   for (const track of tracks) {
-    for (const kf of track.data.keyframes) {
+    const keyframes = keyframeUtils.getSortedKeyframesCached(
+      track.data.keyframes,
+    )
+    for (const kf of keyframes) {
       let existing = byPosition.get(kf.position)
       if (!existing) {
         existing = []

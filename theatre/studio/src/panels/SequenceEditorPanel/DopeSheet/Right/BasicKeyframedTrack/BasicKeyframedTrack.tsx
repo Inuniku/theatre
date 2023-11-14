@@ -1,23 +1,24 @@
-import type {TrackData} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {TrackData} from '@theatre/sync-server/state/types/core'
 import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
 import type {SequenceEditorTree_PrimitiveProp} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import {usePrism, useVal} from '@theatre/react'
 import type {Pointer} from '@theatre/dataverse'
 import {val} from '@theatre/dataverse'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import SingleKeyframeEditor from './KeyframeEditor/SingleKeyframeEditor'
-import type {IContextMenuItem} from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
 import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import getStudio from '@theatre/studio/getStudio'
-import {arePathsEqual} from '@theatre/shared/utils/addresses'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/studio/store/types'
+import {arePathsEqual} from '@theatre/utils/pathToProp'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/sync-server/state/types'
 import KeyframeSnapTarget, {
   snapPositionsStateD,
 } from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
 import {createStudioSheetItemKey} from '@theatre/shared/utils/ids'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
+import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
 
 const Container = styled.div`
   position: relative;
@@ -82,7 +83,10 @@ const BasicKeyframedTrack: React.VFC<BasicKeyframedTracksProps> = React.memo(
       [trackData, leaf.trackId],
     )
 
-    const keyframeEditors = trackData.keyframes.map((kf, index) => (
+    const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
+      trackData.keyframes,
+    )
+    const keyframeEditors = sortedKeyframes.map((kf, index) => (
       <SingleKeyframeEditor
         key={'keyframe-' + kf.id}
         itemKey={createStudioSheetItemKey.forTrackKeyframe(
@@ -110,7 +114,7 @@ const BasicKeyframedTrack: React.VFC<BasicKeyframedTracksProps> = React.memo(
 
     const additionalSnapTargets = !snapToAllKeyframes
       ? null
-      : trackData.keyframes.map((kf) => (
+      : sortedKeyframes.map((kf) => (
           <KeyframeSnapTarget
             key={`additionalSnapTarget-${kf.id}`}
             layoutP={layoutP}
@@ -159,8 +163,9 @@ function useBasicKeyframedTrackContextMenu(
 function pasteKeyframesContextMenuItem(
   props: BasicKeyframedTracksProps,
   keyframes: KeyframeWithPathToPropFromCommonRoot[],
-): IContextMenuItem {
+): ContextMenuItem {
   return {
+    type: 'normal',
     label: 'Paste Keyframes',
     enabled: keyframes.length > 0,
     callback: () => {

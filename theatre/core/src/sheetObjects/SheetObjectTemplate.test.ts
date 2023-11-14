@@ -1,12 +1,12 @@
-/*
- * @jest-environment jsdom
- */
 import {setupTestSheet} from '@theatre/shared/testUtils'
-import {encodePathToProp} from '@theatre/shared/utils/addresses'
-import {asSequenceTrackId} from '@theatre/shared/utils/ids'
-import type {ObjectAddressKey, SequenceTrackId} from '@theatre/shared/utils/ids'
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import {encodePathToProp} from '@theatre/utils/pathToProp'
+import type {
+  ObjectAddressKey,
+  SequenceTrackId,
+} from '@theatre/sync-server/state/types/core'
+import type {$IntentionalAny} from '@theatre/utils/types'
 import {iterateOver} from '@theatre/dataverse'
+import {asSequenceTrackId} from '@theatre/shared/utils/ids'
 
 describe(`SheetObjectTemplate`, () => {
   describe(`getArrayOfValidSequenceTracks()`, () => {
@@ -18,7 +18,7 @@ describe(`SheetObjectTemplate`, () => {
         sequence: {
           type: 'PositionalSequence',
           subUnitsPerUnit: 30,
-          length: 10,
+          // length: 10,
           tracksByObject: {
             ['obj' as ObjectAddressKey]: {
               trackIdByPropPath: {
@@ -54,8 +54,6 @@ describe(`SheetObjectTemplate`, () => {
         },
         sequence: {
           type: 'PositionalSequence',
-          subUnitsPerUnit: 30,
-          length: 10,
           tracksByObject: {},
         },
       })
@@ -90,7 +88,6 @@ describe(`SheetObjectTemplate`, () => {
         },
       })
 
-      debugger
       const iter = iterateOver(
         obj.template.getMapOfValidSequenceTracks_forStudio(),
       )

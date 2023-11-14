@@ -2,8 +2,8 @@ import type {
   IPlaybackDirection,
   IPlaybackRange,
 } from '@theatre/core/sequences/Sequence'
-import {defer} from '@theatre/shared/utils/defer'
-import noop from '@theatre/shared/utils/noop'
+import {defer} from '@theatre/utils/defer'
+import noop from '@theatre/utils/noop'
 import type {Prism, Pointer, Ticker} from '@theatre/dataverse'
 import {Atom} from '@theatre/dataverse'
 
@@ -223,7 +223,7 @@ export default class DefaultPlaybackController implements IPlaybackController {
     // causing unnecessary recalculations
     const untapFromRangeD = rangeD.keepHot()
     // We'll release our subscription once this promise resolves/rejects, for whatever reason
-    deferred.promise.then(untapFromRangeD, untapFromRangeD)
+    void deferred.promise.then(untapFromRangeD, untapFromRangeD)
 
     let lastTickerTime = ticker.time
 

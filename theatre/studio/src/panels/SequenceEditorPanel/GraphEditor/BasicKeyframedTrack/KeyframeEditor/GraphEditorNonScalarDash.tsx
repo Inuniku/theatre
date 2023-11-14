@@ -1,8 +1,9 @@
 import React from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
-import type {Keyframe} from '@theatre/core/projects/store/types/SheetState_Historic'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import {transformBox} from './Curve'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 export const dotSize = 6
 
@@ -22,8 +23,12 @@ const GraphEditorNonScalarDash: React.VFC<IProps> = (props) => {
 
   const pathD = `M 0 0 L 1 1`
 
+  const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
+    trackData.keyframes,
+  )
+
   const transform = transformBox(
-    trackData.keyframes[index].position,
+    sortedKeyframes[index].position,
     props.extremumSpace.fromValueSpace(0),
     0,
     props.extremumSpace.fromValueSpace(1) -

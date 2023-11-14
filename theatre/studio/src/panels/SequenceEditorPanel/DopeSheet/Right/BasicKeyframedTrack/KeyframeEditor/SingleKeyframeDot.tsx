@@ -2,9 +2,9 @@ import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 
 import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscard} from '@theatre/studio/StudioStore/StudioStore'
+import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
 import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import type {UseDragOpts} from '@theatre/studio/uiComponents/useDrag'
+import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
 import useDrag from '@theatre/studio/uiComponents/useDrag'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import {val} from '@theatre/dataverse'
@@ -27,6 +27,7 @@ import {useKeyframeInlineEditorPopover} from './useSingleKeyframeInlineEditorPop
 import usePresence, {
   PresenceFlag,
 } from '@theatre/studio/uiComponents/usePresence'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 export const DOT_SIZE_PX = 6
 const DOT_HOVER_SIZE_PX = DOT_SIZE_PX + 2
@@ -180,6 +181,7 @@ function useSingleKeyframeContextMenu(
 
       return [
         {
+          type: 'normal',
           label: copyableKeyframes.length > 0 ? 'Copy (selection)' : 'Copy',
           callback: () => {
             if (copyableKeyframes.length > 0) {
@@ -198,6 +200,7 @@ function useSingleKeyframeContextMenu(
           },
         },
         {
+          type: 'normal',
           label:
             props.selection !== undefined ? 'Delete (selection)' : 'Delete',
           callback: () => {
@@ -241,7 +244,7 @@ function useDragForSingleKeyframeDot(
 
   const {onClickFromDrag} = options
 
-  const useDragOpts = useMemo<UseDragOpts>(() => {
+  const useDragOpts = useMemo<DragOpts>(() => {
     return {
       debugName: 'KeyframeDot/useDragKeyframe',
       onDragStart(event) {
@@ -284,8 +287,9 @@ function useDragForSingleKeyframeDot(
             .getDragHandlers({
               ...sheetObject.address,
               domNode: node!,
-              positionAtStartOfDrag:
-                props.track.data.keyframes[props.index].position,
+              positionAtStartOfDrag: keyframeUtils.getSortedKeyframesCached(
+                props.track.data.keyframes,
+              )[props.index].position,
             })
             .onDragStart(event)
 
@@ -310,12 +314,13 @@ function useDragForSingleKeyframeDot(
           propsAtStartOfDrag.layoutP.scaledSpace.toUnitSpace,
         )
 
-        let tempTransaction: CommitOrDiscard | undefined
+        let tempTransaction: CommitOrDiscardOrRecapture | undefined
 
         return {
           onDrag(dx, dy, event) {
-            const original =
-              propsAtStartOfDrag.track.data.keyframes[propsAtStartOfDrag.index]
+            const original = keyframeUtils.getSortedKeyframesCached(
+              propsAtStartOfDrag.track.data.keyframes,
+            )[propsAtStartOfDrag.index]
             const newPosition = Math.max(
               // check if our event hoversover a [data-pos] element
               DopeSnap.checkIfMouseEventSnapToPos(event, {

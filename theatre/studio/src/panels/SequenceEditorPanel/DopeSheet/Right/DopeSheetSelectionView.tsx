@@ -1,12 +1,12 @@
 import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscard} from '@theatre/studio/StudioStore/StudioStore'
+import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
 import useDrag from '@theatre/studio/uiComponents/useDrag'
 import useKeyDown from '@theatre/studio/uiComponents/useKeyDown'
 import useValToAtom from '@theatre/studio/uiComponents/useValToAtom'
-import mutableSetDeep from '@theatre/shared/utils/mutableSetDeep'
+import mutableSetDeep from '@theatre/utils/mutableSetDeep'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import {usePrism} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import type {$IntentionalAny} from '@theatre/utils/types'
 import type {Pointer} from '@theatre/dataverse'
 import {val} from '@theatre/dataverse'
 import React, {useMemo, useRef} from 'react'
@@ -25,6 +25,7 @@ import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/Do
 import {collectAggregateKeyframesInPrism} from './collectAggregateKeyframes'
 import type {ILogger, IUtilLogger} from '@theatre/shared/logger'
 import {useLogger} from '@theatre/studio/uiComponents/useLogger'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 const HITBOX_SIZE_PX = 5
 
@@ -35,6 +36,7 @@ const Container = styled.div<{isShiftDown: boolean}>`
 const DopeSheetSelectionView: React.FC<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   height: number
+  children: React.ReactNode
 }> = ({layoutP, children, height}) => {
   const [containerRef, containerNode] = useRefAndState<HTMLDivElement | null>(
     null,
@@ -252,7 +254,9 @@ namespace utils {
         return
       }
 
-      for (const kf of trackData.keyframes) {
+      for (const kf of keyframeUtils.getSortedKeyframesCached(
+        trackData.keyframes,
+      )) {
         if (
           kf.position + layout.scaledSpace.toUnitSpace(HITBOX_SIZE_PX) <=
           bounds.h[0]
@@ -347,7 +351,7 @@ namespace utils {
         return {
           debugName: 'DopeSheetSelectionView/boundsToSelection',
           onDragStart() {
-            let tempTransaction: CommitOrDiscard | undefined
+            let tempTransaction: CommitOrDiscardOrRecapture | undefined
 
             const toUnitSpace = layout.scaledSpace.toUnitSpace
 

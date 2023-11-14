@@ -1,43 +1,41 @@
 import Scrub from '@theatre/studio/Scrub'
-import type {StudioHistoricState} from '@theatre/studio/store/types/historic'
-import type UI from '@theatre/studio/UI'
+import type {StudioHistoricState} from '@theatre/sync-server/state/types/studio'
+import UI from '@theatre/studio/UI/UI'
 import type {Pointer, Ticker} from '@theatre/dataverse'
 import {Atom, PointerProxy, pointerToPrism} from '@theatre/dataverse'
 import type {
-  CommitOrDiscard,
+  CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
 } from './StudioStore/StudioStore'
 import StudioStore from './StudioStore/StudioStore'
-import type {IExtension, IStudio} from './TheatreStudio'
+import type {IExtension, IStudio, PaneClassDefinition} from './TheatreStudio'
 import TheatreStudio from './TheatreStudio'
 import {nanoid} from 'nanoid/non-secure'
 import type Project from '@theatre/core/projects/Project'
 import type {CoreBits} from '@theatre/core/CoreBundle'
-import SimpleCache from '@theatre/shared/utils/SimpleCache'
+import SimpleCache from '@theatre/utils/SimpleCache'
 import type {IProject, ISheet} from '@theatre/core'
 import PaneManager from './PaneManager'
 import type * as _coreExports from '@theatre/core/coreExports'
-import type {OnDiskState} from '@theatre/core/projects/store/storeTypes'
-import type {Deferred} from '@theatre/shared/utils/defer'
-import {defer} from '@theatre/shared/utils/defer'
-import type {ProjectId} from '@theatre/shared/utils/ids'
+import type {
+  OnDiskState,
+  ProjectEphemeralState,
+} from '@theatre/sync-server/state/types/core'
+import type {Deferred} from '@theatre/utils/defer'
+import {defer} from '@theatre/utils/defer'
+import type {ProjectId} from '@theatre/sync-server/state/types/core'
 import checkForUpdates from './checkForUpdates'
 import shallowEqual from 'shallowequal'
 import {createStore} from './IDBStorage'
-import {getAllPossibleAssetIDs} from '@theatre/shared/utils/assets'
+import {getAllPossibleAssetIDs} from '@theatre/studio/utils/assets'
 import {notify} from './notify'
 import type {RafDriverPrivateAPI} from '@theatre/core/rafDrivers'
+import {persistAtom} from '@theatre/utils/persistAtom'
+import produce from 'immer'
 
 const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
 
 export type CoreExports = typeof _coreExports
-
-const UIConstructorModule =
-  typeof window !== 'undefined' ? require('./UI') : null
-
-// this package has a reference to `window` that breaks SSR, so we require it conditionally
-const blobCompare =
-  typeof window !== 'undefined' ? require('blob-compare') : null
 
 const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@theatre/studio' but haven't initialized it. You can initialize the studio by:
 \`\`\`
@@ -67,8 +65,14 @@ studio.initialize()
 \`\`\`
 `
 
+export type UpdateCheckerResponse =
+  | {hasUpdates: true; newVersion: string; releasePage: string}
+  | {hasUpdates: false}
+
 export class Studio {
-  readonly ui!: UI
+  readonly ui: UI
+  // this._uiInitDeferred.promise will resolve once this._ui is set
+
   readonly publicApi: IStudio
   readonly address: {studioId: string}
   readonly _projectsProxy: PointerProxy<Record<ProjectId, Project>> =
@@ -78,6 +82,7 @@ export class Studio {
     this._projectsProxy.pointer
 
   private readonly _store = new StudioStore()
+
   private _corePrivateApi: CoreBits['privateAPI'] | undefined
 
   private readonly _cache = new SimpleCache()
@@ -92,6 +97,36 @@ export class Studio {
    * A Deferred that will resolve once studio is initialized (and its state is read from storage)
    */
   private readonly _initializedDeferred: Deferred<void> = defer()
+
+  readonly ephemeralAtom = new Atom<{
+    // reflects the value of _initializedDeferred.promise. Since it's in an atom, it can be accessed via a pointer
+    initialized: boolean
+    coreByProject: {[projectId in string]: ProjectEphemeralState}
+    extensions: {
+      byId: {[extensionId in string]?: IExtension}
+      paneClasses: {
+        [paneClassName in string]?: {
+          extensionId: string
+          classDefinition: PaneClassDefinition
+        }
+      }
+    }
+  }>({
+    initialized: false,
+    coreByProject: {},
+    extensions: {
+      byId: {},
+      paneClasses: {},
+    },
+  })
+
+  readonly ahistoricAtom = new Atom<{
+    updateChecker?: {
+      // timestamp of the last time we checked for updates
+      lastChecked: number
+      result: UpdateCheckerResponse | 'error'
+    }
+  }>({})
   /**
    * Tracks whether studio.initialize() is called.
    */
@@ -125,10 +160,7 @@ export class Studio {
     this.address = {studioId: nanoid(10)}
     this.publicApi = new TheatreStudio(this)
 
-    // initialize UI if we're in the browser
-    if (process.env.NODE_ENV !== 'test' && typeof window !== 'undefined') {
-      this.ui = new UIConstructorModule.default(this)
-    }
+    this.ui = new UI(this)
 
     this._attachToIncomingProjects()
     this.paneManager = new PaneManager(this)
@@ -160,9 +192,25 @@ export class Studio {
       console.warn(STUDIO_INITIALIZED_LATE_MSG)
     }
 
-    const storeOpts: Parameters<typeof this._store['initialize']>[0] = {
+    const storeOpts: Parameters<StudioStore['initialize']>[0] = {
       persistenceKey: DEFAULT_PERSISTENCE_KEY,
       usePersistentStorage: true,
+      serverUrl: 'https://app.theatrejs.com',
+    }
+
+    if (typeof opts?.serverUrl == 'string') {
+      if (
+        // a fully formed url
+        opts.serverUrl.match(/^(https?:)?\/\//) &&
+        // not ending with a slash
+        !opts.serverUrl.endsWith('/')
+      ) {
+        storeOpts.serverUrl = opts.serverUrl
+      } else {
+        throw new Error(
+          'parameter `serverUrl` in `studio.initialize({serverUrl})` must be either undefined or a fully formed url (e.g. `https://app.theatrejs.com`)',
+        )
+      }
     }
 
     if (typeof opts?.persistenceKey === 'string') {
@@ -171,6 +219,20 @@ export class Studio {
 
     if (opts?.usePersistentStorage === false || typeof window === 'undefined') {
       storeOpts.usePersistentStorage = false
+    }
+
+    const ahistoricAtomInitializedD = defer<void>()
+    if (storeOpts.usePersistentStorage) {
+      persistAtom(
+        this.ahistoricAtom,
+        this.ahistoricAtom.pointer,
+        () => {
+          ahistoricAtomInitializedD.resolve()
+        },
+        'theatrejs-studio-ahistoric',
+      )
+    } else {
+      ahistoricAtomInitializedD.resolve()
     }
 
     if (opts?.__experimental_rafDriver) {
@@ -203,16 +265,28 @@ export class Studio {
       return
     }
 
-    this._initializedDeferred.resolve()
+    if (process.env.NODE_ENV !== 'test' && typeof window !== 'undefined') {
+      await this.ui.ready
+    }
 
-    if (process.env.NODE_ENV !== 'test' && this.ui) {
+    await ahistoricAtomInitializedD.promise
+    this._initializedDeferred.resolve()
+    this.ephemeralAtom.setByPointer((p) => p.initialized, true)
+
+    if (process.env.NODE_ENV !== 'test') {
       this.ui.render()
-      checkForUpdates()
+      checkForUpdates().catch((err) => {
+        console.error(err)
+      })
     }
   }
 
   get initialized(): Promise<void> {
     return this._initializedDeferred.promise
+  }
+
+  get initializedP(): Pointer<boolean> {
+    return this.ephemeralAtom.pointer.initialized
   }
 
   _attachToIncomingProjects() {
@@ -246,12 +320,24 @@ export class Studio {
     return new Scrub(this)
   }
 
-  tempTransaction(fn: (api: ITransactionPrivateApi) => void): CommitOrDiscard {
-    return this._store.tempTransaction(fn)
+  tempTransaction(
+    fn: (api: ITransactionPrivateApi) => void,
+    existingTransaction: CommitOrDiscardOrRecapture | undefined = undefined,
+  ): CommitOrDiscardOrRecapture {
+    return this._store.tempTransaction(fn, existingTransaction)
   }
 
-  transaction(fn: (api: ITransactionPrivateApi) => void): void {
-    return this.tempTransaction(fn).commit()
+  transaction(
+    fn: (api: ITransactionPrivateApi) => void,
+    undoable: boolean = true,
+  ): unknown {
+    return this._store.transaction(fn, undoable)
+  }
+
+  authenticate(
+    opts: Parameters<StudioStore['authenticate']>[0],
+  ): ReturnType<StudioStore['authenticate']> {
+    return this._store.authenticate(opts)
   }
 
   __dev_startHistoryFromScratch(newHistoricPart: StudioHistoricState) {
@@ -270,7 +356,7 @@ export class Studio {
     return this._coreAtom.pointer.core
   }
 
-  extend(extension: IExtension) {
+  extend(extension: IExtension, opts?: {__experimental_reconfigure?: boolean}) {
     if (!extension || typeof extension !== 'object') {
       throw new Error(`Extensions must be JS objects`)
     }
@@ -279,9 +365,14 @@ export class Studio {
       throw new Error(`extension.id must be a string`)
     }
 
-    this.transaction(({drafts}) => {
-      if (drafts.ephemeral.extensions.byId[extension.id]) {
-        const prevExtension = drafts.ephemeral.extensions.byId[extension.id]
+    const reconfigure = opts?.__experimental_reconfigure === true
+
+    const extensionId = extension.id
+
+    const prevExtension = this.ephemeralAtom.get().extensions.byId[extensionId]
+    if (prevExtension) {
+      if (reconfigure) {
+      } else {
         if (
           extension === prevExtension ||
           shallowEqual(extension, prevExtension)
@@ -290,37 +381,61 @@ export class Studio {
           // as long as it's the same extension, we can safely ignore.
           return
         }
-        throw new Error(`Extension id "${extension.id}" is already defined`)
+        throw new Error(
+          `Extension id "${extension.id}" is already defined. If you mean to re-configure the extension, do it like this: studio.extend(extension, {__experimental_reconfigure: true})})`,
+        )
       }
+    }
 
-      drafts.ephemeral.extensions.byId[extension.id] = extension
+    this.ephemeralAtom.reduceByPointer(
+      (p) => p.extensions,
+      (extensions) => {
+        return produce(extensions, (draft) => {
+          draft.byId[extension.id] = extension
 
-      const allPaneClasses = drafts.ephemeral.extensions.paneClasses
+          const allPaneClasses = draft.paneClasses
 
-      extension.panes?.forEach((classDefinition) => {
-        if (typeof classDefinition.class !== 'string') {
-          throw new Error(`pane.class must be a string`)
-        }
+          if (reconfigure && prevExtension) {
+            // remove all pane classes that were set by the previous version of the extension
+            prevExtension.panes?.forEach((classDefinition) => {
+              delete allPaneClasses[classDefinition.class]
+            })
+          }
 
-        if (classDefinition.class.length < 3) {
-          throw new Error(
-            `pane.class should be a string with 3 or more characters`,
-          )
-        }
+          // if the extension defines pane classes, add them to the list of all pane classes
+          extension.panes?.forEach((classDefinition) => {
+            if (typeof classDefinition.class !== 'string') {
+              throw new Error(`pane.class must be a string`)
+            }
 
-        const existing = allPaneClasses[classDefinition.class]
-        if (existing) {
-          throw new Error(
-            `Pane class "${classDefinition.class}" already exists and is supplied by extension ${existing}`,
-          )
-        }
+            if (classDefinition.class.length < 3) {
+              throw new Error(
+                `pane.class should be a string with 3 or more characters`,
+              )
+            }
 
-        allPaneClasses[classDefinition.class] = {
-          extensionId: extension.id,
-          classDefinition: classDefinition,
-        }
-      })
-    })
+            const existing = allPaneClasses[classDefinition.class]
+            if (existing) {
+              if (reconfigure && existing.extensionId === extension.id) {
+                // well this should never happen because we already deleted the pane class above
+                console.warn(
+                  `Pane class "${classDefinition.class}" already exists. This is a bug in Theatre.js. Please report it at https://github.com/theatre-js/theatre/issues/new`,
+                )
+              } else {
+                throw new Error(
+                  `Pane class "${classDefinition.class}" already exists and is supplied by extension ${existing}`,
+                )
+              }
+            }
+
+            allPaneClasses[classDefinition.class] = {
+              extensionId: extension.id,
+              classDefinition: classDefinition,
+            }
+          })
+        })
+      },
+    )
   }
 
   getStudioProject(core: CoreExports): IProject {
@@ -468,8 +583,10 @@ export class Studio {
           }
 
           if (existingAsset) {
+            const blobCompare = (await import('blob-compare')).default
+
             // @ts-ignore
-            sameSame = await blobCompare!.isEqual(asset, existingAsset)
+            sameSame = await blobCompare.isEqual(asset, existingAsset)
 
             // if same same, we do nothing
             if (sameSame) {

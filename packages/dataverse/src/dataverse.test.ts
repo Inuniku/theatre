@@ -1,4 +1,5 @@
 import type {Pointer, Prism} from '@theatre/dataverse'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   isPointer,
   isPrism,
@@ -10,8 +11,7 @@ import {
   Ticker,
   val,
 } from '@theatre/dataverse'
-// eslint-disable-next-line no-restricted-imports
-import {set as lodashSet} from 'lodash'
+import {set as lodashSet} from 'lodash-es'
 import {isPointerToPrismProvider} from './pointerToPrism'
 
 describe(`The exhaustive guide to dataverse`, () => {
@@ -28,8 +28,8 @@ describe(`The exhaustive guide to dataverse`, () => {
   describe(`0 - Concepts`, () => {
     // There 4 main concepts in dataverse:
     // - Atoms, hold the state of your application.
-    // - Pointers are a type-safe way to get/set/react-to changes in Atoms.
-    // - Prisms are functions that react to changes in atoms and other prisms.
+    // - Pointers are a type-safe way to refer to specific properties of atoms.
+    // - Prisms are functions that derive values from atoms or from other prisms.
     // - Tickers are a way to schedule and synchronise computations.
 
     // before we dive into the concepts, let me show you how a simple dataverse setup looks like.
@@ -535,11 +535,9 @@ describe(`The exhaustive guide to dataverse`, () => {
 
       // now let's define the `listen` and `get` functions that we'll pass to `prism.source()`
       function listen(cb: (value: number) => void) {
-        // `atom._onPointerValueChange()` is a method that we can use to listen to changes in a specific path of the atom's state.
-        // This is not a public API, so typescript will complain, but we can silence it with `@ts-ignore`.
-        // _onPointerValueChange() returns an unsubscribe function, so we'll just return that as is.
-        // @ts-ignore
-        return atom._onPointerValueChange(
+        // `atom.onChangeByPointer()` is a method that we can use to listen to changes in a specific path of the atom's state.
+        // onChangeByPointer() returns an unsubscribe function, so we'll just return that as is.
+        return atom.onChangeByPointer(
           // the path to listen to is just the pointer to the `bar` property of the atom's state.
           atom.pointer.bar,
           cb,
@@ -696,7 +694,7 @@ describe(`The exhaustive guide to dataverse`, () => {
 
       // Let's create a function that will set a property of an object by a pointer, similar to `lodash.set()`.
       // The function will take the root object, the pointer, and the new value.
-      function setByPointer<Root, Value>(
+      function setByPointer<Root extends {}, Value>(
         root: Root,
         getPointer: (ptr: Pointer<Root>) => Pointer<Value>,
         newValue: Value,
@@ -756,8 +754,7 @@ describe(`The exhaustive guide to dataverse`, () => {
 
         // the listen function will listen to changes on the pointer
         const listen = (cb: (newValue: V) => void): (() => void) => {
-          // @ts-ignore we'll ignore the typescript error because `_onPointerValueChange()` is not a public method
-          return atom._onPointerValueChange(ptr, cb)
+          return atom.onChangeByPointer(ptr, cb)
         }
 
         const get = (): V => {
@@ -802,7 +799,7 @@ describe(`The exhaustive guide to dataverse`, () => {
       expect(pointerToPrismV2(ptr).getValue()).toBe(0) // the prism works
 
       // The second improvement would be to decouple `pointerToPrism()` from the implementation of `Atom`.
-      // Namely, `pointerToPrism()` only calls `Atom._onPointerValueChange()` and `Atom.getByPointer()`, which
+      // Namely, `pointerToPrism()` only calls `Atom.onChangeByPointer()` and `Atom.getByPointer()`, which
       // are methods that can be implemented on other objects as well. Instead, we can just define an interface
       // that requires these methods to be implemented.
       // We call this interface `PointerToPrismProvider`:

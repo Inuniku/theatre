@@ -5,27 +5,27 @@ import {getPointerParts, prism, val} from '@theatre/dataverse'
 import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
 import getStudio from '@theatre/studio/getStudio'
 import type Scrub from '@theatre/studio/Scrub'
-import type {IContextMenuItem} from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import getDeep from '@theatre/shared/utils/getDeep'
+import getDeep from '@theatre/utils/getDeep'
 import {usePrismInstance} from '@theatre/react'
 import type {
   $IntentionalAny,
   SerializablePrimitive as SerializablePrimitive,
-} from '@theatre/shared/utils/types'
+} from '@theatre/utils/types'
 import type {PropTypeConfig_AllSimples} from '@theatre/core/propTypes'
 import {isPropConfSequencable} from '@theatre/shared/propTypes/utils'
-import type {SequenceTrackId} from '@theatre/shared/utils/ids'
+import type {SequenceTrackId} from '@theatre/sync-server/state/types/core'
 import DefaultOrStaticValueIndicator from './DefaultValueIndicator'
 import type {NearbyKeyframes} from './getNearbyKeyframesOfTrack'
 import {getNearbyKeyframesOfTrack} from './getNearbyKeyframesOfTrack'
 import type {NearbyKeyframesControls} from './NextPrevKeyframeCursors'
 import NextPrevKeyframeCursors from './NextPrevKeyframeCursors'
-import type {Asset} from '@theatre/shared/utils/assets'
+import type {Asset, File as AssetFile} from '@theatre/utils/types'
+import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
 
 interface EditingToolsCommon<T> {
   value: T
   beingScrubbed: boolean
-  contextMenuItems: Array<IContextMenuItem>
+  contextMenuItems: Array<ContextMenuItem>
   /** e.g. `< • >` or `<   >` for {@link EditingToolsSequenced} */
   controlIndicators: React.ReactElement
 
@@ -33,7 +33,7 @@ interface EditingToolsCommon<T> {
   discardTemporaryValue(): void
   permanentlySetValue(v: T): void
 
-  getAssetUrl: (asset: Asset) => string | undefined
+  getAssetUrl: (asset: Asset | AssetFile) => string | undefined
   createAsset(asset: File): Promise<string | null>
 }
 
@@ -116,7 +116,7 @@ function createPrism<T extends SerializablePrimitive>(
     const editAssets = {
       createAsset: (asset: File): Promise<string | null> =>
         obj.sheet.project.assetStorage.createAsset(asset),
-      getAssetUrl: (asset: Asset) =>
+      getAssetUrl: (asset: Asset | AssetFile) =>
         asset.id
           ? obj.sheet.project.assetStorage.getAssetUrl(asset.id)
           : undefined,
@@ -134,7 +134,7 @@ function createPrism<T extends SerializablePrimitive>(
         ),
       ) === true
 
-    const contextMenuItems: IContextMenuItem[] = []
+    const contextMenuItems: ContextMenuItem[] = []
 
     const common: EditingToolsCommon<T> = {
       ...editPropValue,
@@ -157,6 +157,7 @@ function createPrism<T extends SerializablePrimitive>(
 
       if (isSequenced) {
         contextMenuItems.push({
+          type: 'normal',
           label: 'Make static',
           callback: () => {
             getStudio()!.transaction(({stateEditors}) => {
@@ -278,6 +279,7 @@ function createPrism<T extends SerializablePrimitive>(
 
     if (typeof staticOverride !== 'undefined') {
       contextMenuItems.push({
+        type: 'normal',
         label: 'Reset to default',
         callback: () => {
           getStudio()!.transaction(({unset: unset}) => {
@@ -289,6 +291,7 @@ function createPrism<T extends SerializablePrimitive>(
 
     if (isSequencable) {
       contextMenuItems.push({
+        type: 'normal',
         label: 'Sequence',
         callback: () => {
           getStudio()!.transaction(({stateEditors}) => {
@@ -296,7 +299,6 @@ function createPrism<T extends SerializablePrimitive>(
 
             stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsSequenced(
               propAddress,
-              propConfig,
             )
           })
         },
@@ -309,7 +311,12 @@ function createPrism<T extends SerializablePrimitive>(
         type: 'Static',
         shade: common.beingScrubbed ? 'Static_BeingScrubbed' : 'Static',
         controlIndicators: (
-          <DefaultOrStaticValueIndicator hasStaticOverride={true} />
+          <DefaultOrStaticValueIndicator
+            hasStaticOverride={true}
+            obj={obj}
+            pathToProp={pathToProp}
+            propConfig={propConfig}
+          />
         ),
       }
       return ret
@@ -320,7 +327,12 @@ function createPrism<T extends SerializablePrimitive>(
       type: 'Default',
       shade: 'Default',
       controlIndicators: (
-        <DefaultOrStaticValueIndicator hasStaticOverride={false} />
+        <DefaultOrStaticValueIndicator
+          hasStaticOverride={true}
+          obj={obj}
+          pathToProp={pathToProp}
+          propConfig={propConfig}
+        />
       ),
     }
 

@@ -1,16 +1,20 @@
 import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type { Pointer} from '@theatre/dataverse';
+import type {Pointer} from '@theatre/dataverse'
 import {Atom} from '@theatre/dataverse'
 import {val} from '@theatre/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import {DopeSnapHitZoneUI} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
-import type {ObjectAddressKey, SequenceTrackId} from '@theatre/shared/utils/ids'
+import type {
+  ObjectAddressKey,
+  SequenceTrackId,
+} from '@theatre/sync-server/state/types/core'
 import type {
   BasicKeyframedTrack,
   HistoricPositionalSequence,
   Keyframe,
-} from '@theatre/core/projects/store/types/SheetState_Historic'
+} from '@theatre/sync-server/state/types/core'
+import {keyframeUtils} from '@theatre/sync-server/state/schema'
 
 const HitZone = styled.div`
   z-index: 1;
@@ -112,7 +116,8 @@ export function collectKeyframeSnapPositions(
           Object.entries(trackDataAndTrackIdByPropPath!.trackData).map(
             ([trackId, track]) => [
               trackId,
-              track!.keyframes
+              keyframeUtils
+                .getSortedKeyframesCached(track!.keyframes)
                 .filter((kf) =>
                   shouldIncludeKeyframe(kf, {
                     trackId,

@@ -2,15 +2,17 @@ import type Project from '@theatre/core/projects/Project'
 import type Sequence from '@theatre/core/sequences/Sequence'
 import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
 import type Sheet from '@theatre/core/sheets/Sheet'
-import {val} from '@theatre/dataverse'
+import {prism, val} from '@theatre/dataverse'
 import type {$IntentionalAny} from '@theatre/dataverse/src/types'
 import {isSheet, isSheetObject} from '@theatre/shared/instanceTypes'
-import type {SheetId} from '@theatre/shared/utils/ids'
+import type {SheetId} from '@theatre/sync-server/state/types/core'
 import {uniq} from 'lodash-es'
 import getStudio from './getStudio'
-import type {OutlineSelectable, OutlineSelection} from './store/types'
 
-export const getOutlineSelection = (): OutlineSelection => {
+export type OutlineSelectable = Project | Sheet | SheetObject
+export type OutlineSelection = OutlineSelectable[]
+
+export const outlineSelection = prism((): OutlineSelection => {
   const projects = val(getStudio().projectsP)
 
   const mapped: (OutlineSelectable | undefined)[] = (
@@ -36,7 +38,7 @@ export const getOutlineSelection = (): OutlineSelection => {
   return uniq(
     mapped.filter((s): s is OutlineSelectable => typeof s !== 'undefined'),
   )
-}
+})
 
 export const getSelectedInstanceOfSheetId = (
   project: Project,
@@ -79,7 +81,8 @@ export function getRegisteredSheetIds(project: Project): string[] {
 
 export function getSelectedSequence(): undefined | Sequence {
   const selectedSheets = uniq(
-    getOutlineSelection()
+    outlineSelection
+      .getValue()
       .filter((s): s is SheetObject | Sheet => isSheet(s) || isSheetObject(s))
       .map((s) => (isSheetObject(s) ? s.sheet : s)),
   )

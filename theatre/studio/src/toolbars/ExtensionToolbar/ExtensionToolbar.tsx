@@ -31,14 +31,16 @@ const ExtensionToolsetRender: React.FC<{
 }> = ({extension, toolbarId}) => {
   const toolsetConfigBox = useMemo(() => new Atom<ToolsetConfig>([]), [])
 
+  const attachFn = extension.toolbars?.[toolbarId]
+
   useLayoutEffect(() => {
-    const detach = extension.toolbars?.[toolbarId]?.(
+    const detach = attachFn?.(
       toolsetConfigBox.set.bind(toolsetConfigBox),
       getStudio()!.publicApi,
     )
 
     if (typeof detach === 'function') return detach
-  }, [extension, toolbarId])
+  }, [extension, toolbarId, attachFn])
 
   const config = useVal(toolsetConfigBox.prism)
 
@@ -50,7 +52,9 @@ export const ExtensionToolbar: React.FC<{
   showLeftDivider?: boolean
 }> = ({toolbarId, showLeftDivider}) => {
   const groups: Array<React.ReactNode> = []
-  const extensionsById = useVal(getStudio().atomP.ephemeral.extensions.byId)
+  const extensionsById = useVal(
+    getStudio().ephemeralAtom.pointer.extensions.byId,
+  )
 
   let isAfterFirstGroup = false
   for (const [, extension] of Object.entries(extensionsById)) {
@@ -69,7 +73,7 @@ export const ExtensionToolbar: React.FC<{
   if (groups.length === 0) return null
 
   return (
-    <Container>
+    <Container data-testid={`theatre-extensionToolbar-${toolbarId}`}>
       {showLeftDivider ? <GroupDivider></GroupDivider> : undefined}
       {groups}
     </Container>

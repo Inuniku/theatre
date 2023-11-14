@@ -1,7 +1,8 @@
 import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import {defer} from '@theatre/shared/utils/defer'
+import {defer} from '@theatre/utils/defer'
 import type Sequence from './Sequence'
 import type {IPlaybackDirection, IPlaybackRange} from './Sequence'
+import type {Keyframe} from '@theatre/sync-server/state/types/core'
 import AudioPlaybackController from './playbackControllers/AudioPlaybackController'
 import {getCoreTicker} from '@theatre/core/coreTicker'
 import type {Pointer} from '@theatre/dataverse'
@@ -132,6 +133,19 @@ export interface ISequence {
     length: number
     position: number
   }>
+
+  /**
+   * Given a property, returns a list of keyframes that affect that property.
+   *
+   * @example
+   * Usage:
+   * ```ts
+   * // let's assume `sheet` is a sheet and obj is one of its objects
+   * const keyframes = sheet.sequence.__experimental_getKeyframes(obj.pointer.x)
+   * console.log(keyframes) // an array of keyframes
+   * ```
+   */
+  __experimental_getKeyframes(prop: Pointer<{}>): Keyframe[]
 
   /**
    * Attaches an audio source to the sequence. Playing the sequence automatically
@@ -291,6 +305,10 @@ export default class TheatreSequence implements ISequence {
     privateAPI(this).position = position
   }
 
+  __experimental_getKeyframes(prop: Pointer<any>): Keyframe[] {
+    return privateAPI(this).getKeyframesOfSimpleProp(prop)
+  }
+
   async attachAudio(args: IAttachAudioArgs): Promise<{
     decodedBuffer: AudioBuffer
     audioContext: AudioContext
@@ -336,7 +354,9 @@ async function resolveAudioBuffer(args: IAttachAudioArgs): Promise<{
     }
     return new Promise<AudioContext>((resolve) => {
       const listener = () => {
-        ctx.resume()
+        ctx.resume().catch((err) => {
+          console.error(err)
+        })
       }
 
       const eventsToHookInto: Array<keyof WindowEventMap> = [
@@ -394,6 +414,7 @@ async function resolveAudioBuffer(args: IAttachAudioArgs): Promise<{
 
     const audioContext = await audioContextPromise
 
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     audioContext.decodeAudioData(
       arrayBuffer,
       decodedBufferDeferred.resolve,

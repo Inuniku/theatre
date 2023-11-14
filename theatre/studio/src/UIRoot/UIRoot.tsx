@@ -7,11 +7,9 @@ import PanelsRoot from './PanelsRoot'
 import GlobalToolbar from '@theatre/studio/toolbars/GlobalToolbar'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import {PortalContext} from 'reakit'
-import type {$IntentionalAny} from '@theatre/shared/utils/types'
+import type {$IntentionalAny} from '@theatre/utils/types'
 import useKeyboardShortcuts from './useKeyboardShortcuts'
 import PointerEventsHandler from '@theatre/studio/uiComponents/PointerEventsHandler'
-import TooltipContext from '@theatre/studio/uiComponents/Popover/TooltipContext'
-import {ProvidePointerCapturing} from './PointerCapturing'
 import {MountAll} from '@theatre/studio/utils/renderInPortalInContext'
 import {PortalLayer, ProvideStyles} from '@theatre/studio/css'
 import {
@@ -20,6 +18,8 @@ import {
 } from '@theatre/shared/logger'
 import {ProvideLogger} from '@theatre/studio/uiComponents/useLogger'
 import {Notifier} from '@theatre/studio/notify'
+import {useChordialCaptureEvents} from '@theatre/studio/uiComponents/chordial/useChodrial'
+import {ChordialOverlay} from '@theatre/studio/uiComponents/chordial/ChordialOverlay'
 
 const MakeRootHostContainStatic =
   typeof window !== 'undefined'
@@ -46,7 +46,9 @@ const INTERNAL_LOGGING = /Playground.+Theatre\.js/.test(
   (typeof document !== 'undefined' ? document?.title : null) ?? '',
 )
 
-export default function UIRoot() {
+export default function UIRoot(props: {
+  containerShadow: ShadowRoot & HTMLElement
+}) {
   const studio = getStudio()
   const [portalLayerRef, portalLayer] = useRefAndState<HTMLDivElement>(
     undefined as $IntentionalAny,
@@ -72,41 +74,42 @@ export default function UIRoot() {
     return () => {}
   }, [visiblityState])
 
+  const chordialRootRef = useChordialCaptureEvents()
+
   const inside = usePrism(() => {
     const visiblityState = val(studio.atomP.ahistoric.visibilityState)
 
-    const initialised = val(studio.atomP.ephemeral.initialised)
+    const initialised = val(studio.initializedP)
 
     return !initialised ? null : (
       <ProvideLogger logger={logger}>
-        <TooltipContext>
-          <ProvidePointerCapturing>
-            <MountExtensionComponents />
-            <PortalContext.Provider value={portalLayer}>
-              <ProvideStyles
-                target={
-                  window.__IS_VISUAL_REGRESSION_TESTING === true
-                    ? undefined
-                    : getStudio()!.ui.containerShadow
+        <MountExtensionComponents />
+        <PortalContext.Provider value={portalLayer}>
+          <ProvideStyles
+            target={
+              window.__IS_VISUAL_REGRESSION_TESTING === true
+                ? undefined
+                : props.containerShadow
+            }
+          >
+            <>
+              <MakeRootHostContainStatic />
+              <Container
+                className={
+                  visiblityState === 'everythingIsHidden' ? 'invisible' : ''
                 }
+                // @ts-ignore
+                ref={chordialRootRef}
               >
-                <>
-                  <MakeRootHostContainStatic />
-                  <Container
-                    className={
-                      visiblityState === 'everythingIsHidden' ? 'invisible' : ''
-                    }
-                  >
-                    <PortalLayer ref={portalLayerRef} />
-                    <GlobalToolbar />
-                    <PanelsRoot />
-                    <Notifier />
-                  </Container>
-                </>
-              </ProvideStyles>
-            </PortalContext.Provider>
-          </ProvidePointerCapturing>
-        </TooltipContext>
+                <PortalLayer ref={portalLayerRef} />
+                <ChordialOverlay />
+                <GlobalToolbar />
+                <PanelsRoot />
+                <Notifier />
+              </Container>
+            </>
+          </ProvideStyles>
+        </PortalContext.Provider>
       </ProvideLogger>
     )
   }, [studio, portalLayerRef, portalLayer])

@@ -1,10 +1,10 @@
 import {prism, val} from '@theatre/dataverse'
-import {emptyArray} from '@theatre/shared/utils'
-import type {PaneInstanceId} from '@theatre/shared/utils/ids'
-import SimpleCache from '@theatre/shared/utils/SimpleCache'
-import type {$IntentionalAny, StrictRecord} from '@theatre/shared/utils/types'
+import SimpleCache from '@theatre/utils/SimpleCache'
+import type {$IntentionalAny, StrictRecord} from '@theatre/utils/types'
 import type {Studio} from './Studio'
 import type {PaneInstance} from './TheatreStudio'
+import type {PaneInstanceId} from '@theatre/sync-server/state/types'
+import {emptyObject} from '@theatre/shared/utils'
 
 export default class PaneManager {
   private readonly _cache = new SimpleCache()
@@ -25,12 +25,12 @@ export default class PaneManager {
       prism((): StrictRecord<PaneInstanceId, PaneInstance<string>> => {
         const core = val(this._studio.coreP)
         if (!core) return {}
-        const instanceDescriptors = val(
-          this._studio.atomP.historic.panelInstanceDesceriptors,
-        )
-        const paneClasses = val(
-          this._studio.atomP.ephemeral.extensions.paneClasses,
-        )
+        const instanceDescriptors =
+          val(this._studio.atomP.historic.panelInstanceDesceriptors)! ??
+          emptyObject
+        const paneClasses =
+          val(this._studio.ephemeralAtom.pointer.extensions.paneClasses) ??
+          emptyObject
 
         const instances: StrictRecord<PaneInstanceId, PaneInstance<string>> = {}
         for (const instanceDescriptor of Object.values(instanceDescriptors)) {
@@ -50,7 +50,7 @@ export default class PaneManager {
               }
               return inst
             },
-            emptyArray,
+            [definition],
           )
 
           instances[instanceId] = instance
@@ -75,13 +75,12 @@ export default class PaneManager {
     }
 
     const extensionId = val(
-      this._studio.atomP.ephemeral.extensions.paneClasses[paneClass]
+      this._studio.ephemeralAtom.pointer.extensions.paneClasses[paneClass]
         .extensionId,
     )
 
-    const allPaneInstances = val(
-      this._studio.atomP.historic.panelInstanceDesceriptors,
-    )
+    const allPaneInstances =
+      val(this._studio.atomP.historic.panelInstanceDesceriptors)! ?? emptyObject
     let instanceId!: PaneInstanceId
     for (let i = 1; i < 1000; i++) {
       instanceId = `${paneClass} #${i}` as PaneInstanceId
@@ -92,11 +91,11 @@ export default class PaneManager {
       throw new Error(`Pane class "${paneClass}" is not registered.`)
     }
 
-    this._studio.transaction(({drafts}) => {
-      drafts.historic.panelInstanceDesceriptors[instanceId] = {
+    this._studio.transaction(({stateEditors}) => {
+      stateEditors.studio.historic.panelInstanceDescriptors.setDescriptor({
         instanceId,
         paneClass,
-      }
+      })
     })
 
     return this._getAllPanes().getValue()[instanceId]!
@@ -110,8 +109,8 @@ export default class PaneManager {
       )
     }
 
-    this._studio.transaction(({drafts}) => {
-      delete drafts.historic.panelInstanceDesceriptors[instanceId]
+    this._studio.transaction(({stateEditors}) => {
+      stateEditors.studio.historic.panelInstanceDescriptors.remove({instanceId})
     })
   }
 }

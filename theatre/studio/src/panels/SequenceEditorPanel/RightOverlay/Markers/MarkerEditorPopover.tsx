@@ -5,15 +5,14 @@ import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEdi
 import {useVal} from '@theatre/react'
 import getStudio from '@theatre/studio/getStudio'
 import type {BasicNumberInputNudgeFn} from '@theatre/studio/uiComponents/form/BasicNumberInput'
-import type {CommitOrDiscard} from '@theatre/studio/StudioStore/StudioStore'
+import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
 import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
-import type {StudioHistoricStateSequenceEditorMarker} from '@theatre/studio/store/types/historic'
+import type {StudioHistoricStateSequenceEditorMarker} from '@theatre/sync-server/state/types'
 import BasicStringInput from '@theatre/studio/uiComponents/form/BasicStringInput'
 
 const Container = styled.div`
   display: flex;
   gap: 8px;
-  /* padding: 4px 8px; */
   height: 28px;
   align-items: center;
 `
@@ -36,7 +35,7 @@ const MarkerEditorPopover: React.FC<{
   const sheet = useVal(layoutP.sheet)
 
   const fns = useMemo(() => {
-    let tempTransaction: CommitOrDiscard | undefined
+    let tempTransaction: CommitOrDiscardOrRecapture | undefined
 
     return {
       temporarilySetValue(newLabel: string): void {
@@ -85,7 +84,7 @@ const MarkerEditorPopover: React.FC<{
 
   return (
     <Container>
-      {/* <Label>Marker</Label> */}
+      <Label>Marker</Label>
       <BasicStringInput
         value={marker.label ?? ''}
         {...fns}

@@ -1,21 +1,24 @@
 import type {Pointer} from '@theatre/dataverse'
 import {isSheetObject} from '@theatre/shared/instanceTypes'
-import type {$FixMe, $IntentionalAny} from '@theatre/shared/utils/types'
+import type {$FixMe, $IntentionalAny} from '@theatre/utils/types'
 import get from 'lodash-es/get'
 import type {ITransactionPrivateApi} from './StudioStore'
 import forEachPropDeep from '@theatre/shared/utils/forEachDeep'
-import getDeep from '@theatre/shared/utils/getDeep'
-import type {SequenceTrackId} from '@theatre/shared/utils/ids'
+import getDeep from '@theatre/utils/getDeep'
+import type {SequenceTrackId} from '@theatre/sync-server/state/types/core'
 import {getPointerParts} from '@theatre/dataverse'
 import type {
   PropTypeConfig,
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
 } from '@theatre/core/propTypes'
-import type {PathToProp} from '@theatre/shared/src/utils/addresses'
+import type {PathToProp} from '@theatre/utils/pathToProp'
 import {getPropConfigByPath} from '@theatre/shared/propTypes/utils'
 import {isPlainObject} from 'lodash-es'
-import userReadableTypeOfValue from '@theatre/shared/utils/userReadableTypeOfValue'
+import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+import type {StudioState} from '@theatre/sync-server/state/types'
+import type {IInvokableDraftEditors} from '@theatre/sync-server/state/schema'
+import {stateEditors} from '@theatre/sync-server/state/schema'
 
 /**
  * Deep-clones a plain JS object or a `string | number | boolean`. In case of a plain
@@ -35,7 +38,7 @@ function cloneDeepSerializableAndPrune<T>(v: T): T | undefined {
   } else if (isPlainObject(v)) {
     const cloned: $IntentionalAny = {}
     let clonedAtLeastOneProp = false
-    for (const [key, val] of Object.entries(v)) {
+    for (const [key, val] of Object.entries(v as {})) {
       const clonedVal = cloneDeepSerializableAndPrune(val)
       if (clonedVal !== undefined) {
         cloned[key] = val
@@ -74,9 +77,13 @@ function forEachDeepSimplePropOfCompoundProp(
 
 export default function createTransactionPrivateApi(
   ensureRunning: () => void,
-  stateEditors: ITransactionPrivateApi['stateEditors'],
-  drafts: ITransactionPrivateApi['drafts'],
+  draft: StudioState,
 ): ITransactionPrivateApi {
+  const _invokableStateEditors = proxyStateEditors(
+    draft,
+    stateEditors,
+    ensureRunning,
+  ) as IInvokableDraftEditors
   return {
     set: (pointer, value) => {
       ensureRunning()
@@ -98,13 +105,6 @@ export default function createTransactionPrivateApi(
             } does not have a prop at ${JSON.stringify(path)}`,
           )
         }
-
-        // if (isPropConfigComposite(propConfig)) {
-        //   propConfig.validate(_value)
-        // } else {
-
-        //   propConfig.validate(_value)
-        // }
 
         const setStaticOrKeyframeProp = <T>(
           value: T,
@@ -137,7 +137,7 @@ export default function createTransactionPrivateApi(
           if (typeof trackId === 'string') {
             const seq = root.sheet.getSequence()
             seq.position = seq.closestGridPosition(seq.position)
-            stateEditors.coreByProject.historic.sheetsById.sequence.setKeyframeAtPosition(
+            _invokableStateEditors.coreByProject.historic.sheetsById.sequence.setKeyframeAtPosition(
               {
                 ...propAddress,
                 trackId,
@@ -148,7 +148,7 @@ export default function createTransactionPrivateApi(
               },
             )
           } else {
-            stateEditors.coreByProject.historic.sheetsById.staticOverrides.byObject.setValueOfPrimitiveProp(
+            _invokableStateEditors.coreByProject.historic.sheetsById.staticOverrides.byObject.setValueOfPrimitiveProp(
               {...propAddress, value: value as $FixMe},
             )
           }
@@ -169,7 +169,7 @@ export default function createTransactionPrivateApi(
               const pathToPropInProvidedValue =
                 pathToProp.slice(lengthOfTopPointer)
 
-              const v = getDeep(_value, pathToPropInProvidedValue)
+              const v = getDeep(_value as {}, pathToPropInProvidedValue)
               if (typeof v !== 'undefined') {
                 setStaticOrKeyframeProp(v, primitivePropConfig, pathToProp)
               } else {
@@ -218,7 +218,7 @@ export default function createTransactionPrivateApi(
             | undefined
 
           if (typeof trackId === 'string') {
-            stateEditors.coreByProject.historic.sheetsById.sequence.unsetKeyframeAtPosition(
+            _invokableStateEditors.coreByProject.historic.sheetsById.sequence.unsetKeyframeAtPosition(
               {
                 ...propAddress,
                 trackId,
@@ -226,7 +226,7 @@ export default function createTransactionPrivateApi(
               },
             )
           } else if (propConfig !== undefined) {
-            stateEditors.coreByProject.historic.sheetsById.staticOverrides.byObject.unsetValueOfPrimitiveProp(
+            _invokableStateEditors.coreByProject.historic.sheetsById.staticOverrides.byObject.unsetValueOfPrimitiveProp(
               propAddress,
             )
           }
@@ -249,12 +249,34 @@ export default function createTransactionPrivateApi(
         )
       }
     },
-    get drafts() {
-      ensureRunning()
-      return drafts
-    },
     get stateEditors() {
-      return stateEditors
+      return _invokableStateEditors
     },
   }
+}
+
+function proxyStateEditors(
+  draft: StudioState,
+  part: $IntentionalAny = stateEditors,
+  ensureRunning: () => void,
+): {} {
+  return new Proxy(part, {
+    get(_, prop) {
+      ensureRunning()
+      if (Object.hasOwn(part, prop)) {
+        const v = part[prop as $IntentionalAny]
+        if (typeof v === 'function') {
+          return (opts: {}) => {
+            ensureRunning()
+            return v(draft, {}, opts)
+          }
+        } else if (typeof v === 'object' && v !== null) {
+          return proxyStateEditors(draft, v, ensureRunning)
+        } else {
+          return v
+        }
+      }
+      return undefined
+    },
+  })
 }
