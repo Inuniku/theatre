@@ -14,7 +14,7 @@ import styled from 'styled-components'
 import type {graphEditorColors} from '@theatre/studio/panels/SequenceEditorPanel/GraphEditor/GraphEditor'
 import type {ExtremumSpace} from '@theatre/studio/panels/SequenceEditorPanel/GraphEditor/BasicKeyframedTrack/BasicKeyframedTrack'
 import Curve from './Curve'
-import CurveHandle from './CurveHandle'
+import {CurveHandle2} from './CurveHandle'
 import GraphEditorDotScalar from './GraphEditorDotScalar'
 import GraphEditorDotNonScalar from './GraphEditorDotNonScalar'
 import GraphEditorNonScalarDash from './GraphEditorNonScalarDash'
@@ -42,7 +42,7 @@ type IKeyframeEditorProps = {
   propConfig: PropTypeConfig_AllSimples
 }
 
-const KeyframeEditor: React.VFC<IKeyframeEditorProps> = (props) => {
+const KeyframeEditor: React.FC<IKeyframeEditorProps> = (props) => {
   const {index, trackData, isScalar} = props
   const cur = trackData.keyframes[index]
   const next = trackData.keyframes[index + 1]
@@ -55,19 +55,16 @@ const KeyframeEditor: React.VFC<IKeyframeEditorProps> = (props) => {
       {shouldShowCurve ? (
         <>
           <Curve {...props} />
-          {!cur.type ||
-            (cur.type === 'bezier' && (
-              <>
-                <CurveHandle {...props} which="left" />
-                <CurveHandle {...props} which="right" />
-              </>
-            ))}
         </>
       ) : (
         noConnector
       )}
       {isScalar ? (
-        <GraphEditorDotScalar {...props} />
+        <>
+          <GraphEditorDotScalar {...props} />
+          <CurveHandle2 {...props} which="h1" />
+          <CurveHandle2 {...props} which="h2" />
+        </>
       ) : (
         <>
           <GraphEditorDotNonScalar {...props} which="left" />

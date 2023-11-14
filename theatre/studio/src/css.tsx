@@ -103,6 +103,7 @@ const propNames = [
   'tooltipPlacement',
   'hasStaticOverride',
   'enabled',
+  'lastSubIsComposite',
 ]
 
 const isPropValid = (propName: string) => !propNames.includes(propName)

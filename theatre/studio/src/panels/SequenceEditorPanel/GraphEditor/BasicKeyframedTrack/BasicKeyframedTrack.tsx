@@ -27,7 +27,7 @@ export type ExtremumSpace = {
   lock(): VoidFn
 }
 
-const BasicKeyframedTrack: React.VFC<{
+const BasicKeyframedTrack: React.FC<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   sheetObject: SheetObject
   pathToProp: PathToProp
@@ -148,12 +148,8 @@ function calculateScalarExtremums(
   keyframes.forEach((cur, i) => {
     const curVal = valueInProp(cur.value, propConfig) as number
     check(curVal)
-    if (!cur.connectedRight) return
-    const next = keyframes[i + 1]
-    if (!next) return
-    const diff = (typeof next.value === 'number' ? next.value : 1) - curVal
-    check(curVal + cur.handles[3] * diff)
-    check(curVal + next.handles[1] * diff)
+    check(curVal + cur.tangents[3])
+    check(curVal + cur.tangents[1])
   })
 
   return [min, max]

@@ -34,6 +34,7 @@ const Container = styled(PointerEventsHandler)`
   z-index: 50;
   position: fixed;
   inset: 0;
+  zoom: 130%;
 
   &.invisible {
     pointer-events: none !important;

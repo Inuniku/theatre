@@ -83,6 +83,7 @@ export type Keyframe = {
   value: SerializableValue
   position: number
   handles: [leftX: number, leftY: number, rightX: number, rightY: number]
+  tangents: [leftX: number, leftY: number, rightX: number, rightY: number]
   connectedRight: boolean
   // defaults to 'bezier' to support project states made with theatre0.5.1 or earlier
   type?: KeyframeType

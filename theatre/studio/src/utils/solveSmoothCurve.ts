@@ -76,27 +76,22 @@ const {HD_AUTOTYPE_NORMAL, HD_AUTOTYPE_LOCKED_FINAL} = eBezTriple_Auto_Type
 
 const {FCURVE_EXTRAPOLATE_CONSTANT, FCURVE_EXTRAPOLATE_LINEAR} = eFCurve_Extend
 
-export function applyAutoTangents(keyframes: Keyframe[]) {
+export function applyAutoTangents(
+  keyframes: Keyframe[],
+  manipulatingIndex?: number,
+  tangent?: 'left' | 'right',
+) {
   const bezt: BezTriple[] = keyframes.map((key, i) => {
-    const prevKey: Keyframe = keyframes[i - 1] ?? key
-    const nextKeyframe: Keyframe = keyframes[i + 1] ?? key
-
-    const t1x = lerp(prevKey.position, key.position, key.handles[0])
-    const t1y = lerp(
-      prevKey.value as number,
-      key.value as number,
-      key.handles[1],
-    )
-
+    const t1x = key.position + key.tangents[0]
+    const t1y = (key.value as number) + key.tangents[1]
     const px = key.position
     const py = key.value as number
 
-    const t2x = lerp(key.position, nextKeyframe.position, key.handles[2])
-    const t2y = lerp(
-      key.value as number,
-      nextKeyframe.value as number,
-      key.handles[3],
-    )
+    const t2x = key.position + key.tangents[2]
+    const t2y = (key.value as number) + key.tangents[3]
+
+    let h1 = eBezTriple_Handle.HD_FREE
+
     return {
       vec: [
         [t1x, t1y, 0],
@@ -106,13 +101,16 @@ export function applyAutoTangents(keyframes: Keyframe[]) {
       h1:
         key.tangentIn === 'auto'
           ? eBezTriple_Handle.HD_AUTO_ANIM
-          : eBezTriple_Handle.HD_FREE,
+          : eBezTriple_Handle.HD_ALIGN,
       h2:
         key.tangentOut === 'auto'
           ? eBezTriple_Handle.HD_AUTO_ANIM
-          : eBezTriple_Handle.HD_FREE,
+          : eBezTriple_Handle.HD_ALIGN,
       auto_handle_type: eBezTriple_Auto_Type.HD_AUTOTYPE_NORMAL,
-      f1: eBezTriple_Flag.ZERO,
+      f1:
+        i === manipulatingIndex && tangent === 'left'
+          ? eBezTriple_Flag.SELECT
+          : eBezTriple_Flag.ZERO,
     }
   })
 
@@ -124,46 +122,21 @@ export function applyAutoTangents(keyframes: Keyframe[]) {
   }
 
   BKE_fcurve_handles_recalc(curve)
-
   const result: Keyframe[] = []
 
   for (let i = 0; i < keyframes.length; i++) {
+    const vec = curve.bezt[i].vec
+
     const key: Keyframe = {
       ...keyframes[i],
-      handles: keyframes[i].handles.map((handle) => handle) as [
-        number,
-        number,
-        number,
-        number,
+      tangents: [
+        vec[0][0] - vec[1][0],
+        vec[0][1] - vec[1][1],
+        vec[2][0] - vec[1][0],
+        vec[2][1] - vec[1][1],
       ],
     }
-    const prevKey: Keyframe = keyframes[i - 1]
-    const nextKeyframe: Keyframe = keyframes[i + 1]
 
-    const bezier = bezt[i]
-
-    if (prevKey) {
-      const h1 = ilerp(prevKey.position, key.position, bezier.vec[0][0])
-      const h2 = ilerp(
-        prevKey.value as number,
-        key.value as number,
-        bezier.vec[0][1],
-      )
-      key.handles[0] = h1
-      key.handles[1] = h2
-    }
-
-    if (nextKeyframe) {
-      const h3 = ilerp(key.position, nextKeyframe.position, bezier.vec[2][0])
-      const h4 = ilerp(
-        key.value as number,
-        nextKeyframe.value as number,
-        bezier.vec[2][1],
-      )
-
-      key.handles[2] = h3
-      key.handles[3] = h4
-    }
     result.push(key)
   }
   return result

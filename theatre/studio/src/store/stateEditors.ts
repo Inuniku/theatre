@@ -796,6 +796,7 @@ namespace stateEditors {
               trackId: SequenceTrackId
               position: number
               handles?: [number, number, number, number]
+              tangents?: [number, number, number, number]
               value: T
               snappingFunction: SnappingFunction
               type?: KeyframeType
@@ -827,11 +828,12 @@ namespace stateEditors {
                 id: generateKeyframeId(),
                 position,
                 connectedRight: true,
-                handles: p.handles || [0.5, 1, 0.5, 0],
+                handles: p.handles ?? [0.5, 1, 0.5, 0],
+                tangents: p.tangents ?? [-1, 0, 1, 0],
                 type: p.type ?? 'bezier',
                 value: p.value,
-                tangentIn: p.tangentIn ?? 'ease',
-                tangentOut: p.tangentOut ?? 'ease',
+                tangentIn: p.tangentIn ?? 'auto',
+                tangentOut: p.tangentOut ?? 'auto',
               })
               return
             }
@@ -840,12 +842,15 @@ namespace stateEditors {
               id: generateKeyframeId(),
               position,
               connectedRight: leftKeyframe.connectedRight,
-              handles: p.handles || [0.5, 1, 0.5, 0],
+              handles: p.handles ?? [0.5, 1, 0.5, 0],
+              tangents: p.tangents ?? [-1, 0, 1, 0],
               type: p.type || 'bezier',
               value: p.value,
-              tangentIn: leftKeyframe.tangentOut,
-              tangentOut: 'ease',
+              tangentIn: 'auto',
+              tangentOut: 'auto',
             })
+
+            track.keyframes = applyAutoTangents(keyframes)
           }
 
           export function unsetKeyframeAtPosition(
@@ -1019,10 +1024,8 @@ namespace stateEditors {
 
               const t = _getTrack(p)
               if (t) {
-                applyAutoTangents(t.keyframes)
+                t.keyframes = applyAutoTangents(t.keyframes)
               }
-
-              // applyAutoTangents(p)
             }
           }
 
@@ -1072,8 +1075,50 @@ namespace stateEditors {
               [...unselected, ...sanitizedKeyframes],
               'position',
             )
-
+            track.keyframes = sorted
             track.keyframes = applyAutoTangents(sorted)
+          }
+
+          export function updateTangent(
+            p: WithoutSheetInstance<SheetObjectAddress> & {
+              trackId: SequenceTrackId
+              keyFrameIndex: number
+              tangent: 'left' | 'right'
+              position: readonly [number, number]
+              snappingFunction: SnappingFunction
+            },
+          ) {
+            const track = _getTrack(p)
+
+            if (!track) return
+
+            function replaceKey(kf: Keyframe, index: number): Keyframe {
+              const replace = p.keyFrameIndex === index
+              if (!replace) return {...kf}
+
+              const h1 = p.tangent === 'left' ? 0 : 2
+              const h2 = p.tangent === 'left' ? 1 : 3
+
+              const tangents = [...kf.tangents] as [
+                number,
+                number,
+                number,
+                number,
+              ]
+              tangents[h1] = p.position[0]
+              tangents[h2] = p.position[1]
+
+              const tangentIn = 'ease'
+              const tangentOut = 'ease'
+              return {...kf, tangents, tangentIn, tangentOut}
+            }
+
+            const keyframes = track.keyframes.map(replaceKey)
+            track.keyframes = applyAutoTangents(
+              keyframes,
+              p.keyFrameIndex,
+              p.tangent,
+            )
           }
         }
 

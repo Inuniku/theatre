@@ -5,6 +5,7 @@ import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import React from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
+import {useGraphEditorContext} from '@theatre/studio\panels\SequenceEditorPanel\GraphEditor\GraphEditorContext'
 
 const SVGPath = styled.path`
   stroke-width: 2;
@@ -23,8 +24,6 @@ const Curve: React.FC<IProps> = (props) => {
   const cur = trackData.keyframes[index]
   const next = trackData.keyframes[index + 1]
 
-  const connectorLengthInUnitSpace = next.position - cur.position
-
   const [nodeRef, node] = useRefAndState<SVGPathElement | null>(null)
 
   const [contextMenu] = useConnectorContextMenu(node, props)
@@ -38,37 +37,41 @@ const Curve: React.FC<IProps> = (props) => {
   const leftYInExtremumSpace = props.extremumSpace.fromValueSpace(curValue)
   const rightYInExtremumSpace = props.extremumSpace.fromValueSpace(nextValue)
 
-  const heightInExtremumSpace = rightYInExtremumSpace - leftYInExtremumSpace
-
-  const transform = transformBox(
-    cur.position,
-    leftYInExtremumSpace,
-    connectorLengthInUnitSpace,
-    heightInExtremumSpace,
+  const t1InExtremumSpace = props.extremumSpace.fromValueSpace(
+    curValue + cur.tangents[3],
+  )
+  const t2InExtremumSpace = props.extremumSpace.fromValueSpace(
+    nextValue + next.tangents[1],
   )
 
-  const x1 = cur.handles[2]
-  const y1 = cur.handles[3]
+  const {unitSpaceToScaledSpaceMultiplier, graphEditorVerticalSpace} =
+    useGraphEditorContext()
 
-  const x2 = next.handles[0]
-  const y2 = next.handles[1]
+  const x1 = cur.position * unitSpaceToScaledSpaceMultiplier
+  const x2 = next.position * unitSpaceToScaledSpaceMultiplier
+  const y1 = graphEditorVerticalSpace * (1 - leftYInExtremumSpace)
+  const y2 = graphEditorVerticalSpace * (1 - rightYInExtremumSpace)
 
-  const pathD = `M 0 0 C ${x1} ${y1} ${x2} ${y2} 1 1`
+  const h1x = x1 + cur.tangents[2] * unitSpaceToScaledSpaceMultiplier
+  const h2x = x2 + next.tangents[0] * unitSpaceToScaledSpaceMultiplier
+
+  const h1y = graphEditorVerticalSpace * (1 - t1InExtremumSpace)
+  const h2y = graphEditorVerticalSpace * (1 - t2InExtremumSpace)
+
+  const pathD = `M ${x1} ${y1} C ${h1x} ${h1y} ${h2x} ${h2y} ${x2} ${y2}`
 
   return (
     <>
       <SVGPath
         ref={nodeRef}
         d={!cur.type || cur.type === 'bezier' ? pathD : pathForHoldType}
-        style={{
-          transform,
-        }}
       />
-
       {contextMenu}
     </>
   )
 }
+
+export default Curve
 
 /**
  * Assuming a box such that: `{x: 0, y: 0, width: 1px, height: 1px}`
@@ -103,8 +106,6 @@ export function transformBox(
 
   return `translate(${translateX}, ${translateY}) scale(${scaleX}, ${scaleY})`
 }
-
-export default Curve
 
 function useConnectorContextMenu(node: SVGElement | null, props: IProps) {
   const {index, trackData} = props

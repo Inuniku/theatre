@@ -185,6 +185,7 @@ function pasteKeyframesContextMenuItem(
               trackId: props.leaf.trackId,
               position: sequence.position + keyframe.position - keyframeOffset,
               handles: keyframe.handles,
+              tangents: keyframe.tangents,
               value: keyframe.value,
               snappingFunction: sequence.closestGridPosition,
               type: keyframe.type,

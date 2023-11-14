@@ -13,6 +13,7 @@ import HorizontallyScrollableArea from '@theatre/studio/panels/SequenceEditorPan
 import PrimitivePropGraph from './PrimitivePropGraph'
 import FrameGrid from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
 import {transparentize} from 'polished'
+import {GraphEditorContextProvider} from './GraphEditorContext'
 
 export const graphEditorColors = {
   '1': {iconColor: '#b98b08'},
@@ -57,6 +58,8 @@ const GraphEditor: React.FCWithChildren<{
       layoutP.scaledSpace.fromUnitSpace,
     )(1)
 
+    const graphEditorVerticalSpace = val(layoutP.graphEditorVerticalSpace.space)
+
     const graphs: Array<React.ReactElement> = []
 
     if (selectedPropsByObject) {
@@ -99,29 +102,36 @@ const GraphEditor: React.FCWithChildren<{
           // @ts-expect-error
           '--unitSpaceToScaledSpaceMultiplier':
             unitSpaceToScaledSpaceMultiplier,
-          '--graphEditorVerticalSpace': `${val(
-            layoutP.graphEditorVerticalSpace.space,
-          )}`,
+          '--graphEditorVerticalSpace': graphEditorVerticalSpace,
         }}
       >
-        <FrameGrid layoutP={layoutP} width={width} height={height} />
-        <HorizontallyScrollableArea layoutP={layoutP} height={height}>
-          <SVGContainer
-            width={contentWidth}
-            height={height}
-            viewBox={`0 0 ${contentWidth} ${height}`}
-          >
-            <g
-              style={{
-                transform: `translate(${val(
-                  layoutP.scaledSpace.leftPadding,
-                )}px, ${val(layoutP.graphEditorDims.padding.top)}px)`,
-              }}
+        <GraphEditorContextProvider
+          value={{
+            graphEditorVerticalSpace,
+            unitSpaceToScaledSpaceMultiplier,
+            minY: 0,
+            maxY: 0,
+          }}
+        >
+          <FrameGrid layoutP={layoutP} width={width} height={height} />
+          <HorizontallyScrollableArea layoutP={layoutP} height={height}>
+            <SVGContainer
+              width={contentWidth}
+              height={height}
+              viewBox={`0 0 ${contentWidth} ${height}`}
             >
-              {graphs}
-            </g>
-          </SVGContainer>
-        </HorizontallyScrollableArea>
+              <g
+                style={{
+                  transform: `translate(${val(
+                    layoutP.scaledSpace.leftPadding,
+                  )}px, ${val(layoutP.graphEditorDims.padding.top)}px)`,
+                }}
+              >
+                {graphs}
+              </g>
+            </SVGContainer>
+          </HorizontallyScrollableArea>
+        </GraphEditorContextProvider>
       </Container>
     )
   }, [layoutP])

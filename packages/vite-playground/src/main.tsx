@@ -9,7 +9,7 @@ const sheet = getProject('id2').sheet('sheeet')
 studio.initialize()
 studio.ui.restore()
 
-sheet.object('obj', {x: 1})
+sheet.object('obj', {x: 1, y: 2, color: 'e'})
 
 ReactDOM.render(
   <React.StrictMode>

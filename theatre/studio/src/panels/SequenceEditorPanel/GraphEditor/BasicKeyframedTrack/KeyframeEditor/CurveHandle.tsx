@@ -4,7 +4,6 @@ import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useCo
 import useDrag from '@theatre/studio/uiComponents/useDrag'
 import useRefAndState from '@theatre/studio/utils/useRefAndState'
 import {val} from '@theatre/dataverse'
-import {clamp} from 'lodash-es'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 import {transformBox} from './Curve'
@@ -13,10 +12,11 @@ import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
 
 export const dotSize = 6
 
-const Circle = styled.circle`
+const Circle = styled.circle<{type: string}>`
   stroke-width: 1px;
   vector-effect: non-scaling-stroke;
-  fill: var(--main-color);
+  fill: ${({type}) => (type === 'auto' ? 'none' : 'var(--main-color)')};
+  stroke: var(--main-color);
   r: 2px;
   pointer-events: none;
 `
@@ -47,7 +47,7 @@ type Which = 'left' | 'right'
 
 type IProps = Parameters<typeof KeyframeEditor>[0] & {which: Which}
 
-const CurveHandle: React.VFC<IProps> = (props) => {
+const CurveHandle: React.FC<IProps> = (props) => {
   const [ref, node] = useRefAndState<SVGCircleElement | null>(null)
 
   const {index, trackData} = props
@@ -57,19 +57,17 @@ const CurveHandle: React.VFC<IProps> = (props) => {
   const [contextMenu] = useOurContextMenu(node, props)
   useOurDrags(node, props)
 
-  const posInDiffSpace =
-    props.which === 'left' ? cur.handles[2] : next.handles[0]
+  const posTangent = props.which === 'left' ? cur.tangents[2] : next.tangents[0]
 
   const posInUnitSpace =
-    cur.position + (next.position - cur.position) * posInDiffSpace
-
-  const valInDiffSpace =
-    props.which === 'left' ? cur.handles[3] : next.handles[1]
+    (props.which === 'left' ? cur.position : next.position) + posTangent
 
   const curValue = props.isScalar ? (cur.value as number) : 0
   const nextValue = props.isScalar ? (next.value as number) : 1
 
-  const value = curValue + (nextValue - curValue) * valInDiffSpace
+  const valTangent = props.which === 'left' ? cur.tangents[3] : next.tangents[1]
+
+  const value = (props.which === 'left' ? curValue : nextValue) + valTangent
 
   const valInExtremumSpace = props.extremumSpace.fromValueSpace(value)
 
@@ -163,36 +161,39 @@ function useOurDrags(node: SVGCircleElement | null, props: IProps): void {
                 dYInExtremumSpace,
               )
 
+            console.log(
+              dPosInUnitSpace,
+              dYInValueSpace,
+              cur.tangents[0],
+              cur.tangents[1],
+              cur.tangents[2],
+              cur.tangents[3],
+            )
+
             const curValue = props.isScalar ? (cur.value as number) : 0
             const nextValue = props.isScalar ? (next.value as number) : 1
             const dyInKeyframeDiffSpace =
               dYInValueSpace / (nextValue - curValue)
 
             if (propsAtStartOfDrag.which === 'left') {
-              const handleX = clamp(
-                cur.handles[2] + dPosInKeyframeDiffSpace,
-                0,
-                1,
-              )
-              const handleY = cur.handles[3] + dyInKeyframeDiffSpace
+              const tangentX = cur.tangents[2] + dPosInUnitSpace
+              const tangentY = cur.tangents[3] + dYInValueSpace
 
               tempTransaction = getStudio()!.tempTransaction(
                 ({stateEditors}) => {
                   stateEditors.coreByProject.historic.sheetsById.sequence.replaceKeyframes(
                     {
                       ...propsAtStartOfDrag.sheetObject.address,
-                      snappingFunction: val(
-                        propsAtStartOfDrag.layoutP.sheet,
-                      ).getSequence().closestGridPosition,
+                      snappingFunction: (a) => a,
                       trackId: propsAtStartOfDrag.trackId,
                       keyframes: [
                         {
                           ...cur,
-                          handles: [
-                            cur.handles[0],
-                            cur.handles[1],
-                            handleX,
-                            handleY,
+                          tangents: [
+                            cur.tangents[0],
+                            cur.tangents[1],
+                            tangentX,
+                            tangentY,
                           ],
                         },
                       ],
@@ -201,12 +202,8 @@ function useOurDrags(node: SVGCircleElement | null, props: IProps): void {
                 },
               )
             } else {
-              const handleX = clamp(
-                next.handles[0] + dPosInKeyframeDiffSpace,
-                0,
-                1,
-              )
-              const handleY = next.handles[1] + dyInKeyframeDiffSpace
+              const tangentX = next.tangents[0] + dPosInUnitSpace
+              const tangentY = next.tangents[1] + dYInValueSpace
 
               tempTransaction = getStudio()!.tempTransaction(
                 ({stateEditors}) => {
@@ -214,17 +211,15 @@ function useOurDrags(node: SVGCircleElement | null, props: IProps): void {
                     {
                       ...propsAtStartOfDrag.sheetObject.address,
                       trackId: propsAtStartOfDrag.trackId,
-                      snappingFunction: val(
-                        propsAtStartOfDrag.layoutP.sheet,
-                      ).getSequence().closestGridPosition,
+                      snappingFunction: (a) => a,
                       keyframes: [
                         {
                           ...next,
-                          handles: [
-                            handleX,
-                            handleY,
-                            next.handles[2],
-                            next.handles[3],
+                          tangents: [
+                            tangentX,
+                            tangentY,
+                            next.tangents[2],
+                            next.tangents[3],
                           ],
                         },
                       ],
@@ -233,6 +228,160 @@ function useOurDrags(node: SVGCircleElement | null, props: IProps): void {
                 },
               )
             }
+          },
+          onDragEnd(dragHappened) {
+            unlockExtremums()
+            if (dragHappened) {
+              if (tempTransaction) {
+                tempTransaction.commit()
+              }
+            } else {
+              if (tempTransaction) {
+                tempTransaction.discard()
+              }
+            }
+          },
+        }
+      },
+    }
+  }, [])
+
+  useDrag(node, handlers)
+}
+
+type Which2 = 'h1' | 'h2'
+
+type IProps2 = Parameters<typeof KeyframeEditor>[0] & {which: Which2}
+
+const CurveHandle2: React.FC<IProps2> = (props) => {
+  const [ref, node] = useRefAndState<SVGCircleElement | null>(null)
+
+  const {index, trackData} = props
+  const cur = trackData.keyframes[index]
+
+  // const [contextMenu] = useOurContextMenu(node, props)
+  useOurDrags2(node, props)
+
+  const posTangent = props.which === 'h1' ? cur.tangents[0] : cur.tangents[2]
+
+  const posInUnitSpace = cur.position + posTangent
+
+  const curValue = props.isScalar ? (cur.value as number) : 0
+
+  const valTangent = props.which === 'h1' ? cur.tangents[1] : cur.tangents[3]
+
+  const value = curValue + valTangent
+
+  const valInExtremumSpace = props.extremumSpace.fromValueSpace(value)
+
+  const heightInExtremumSpace =
+    valInExtremumSpace - props.extremumSpace.fromValueSpace(curValue)
+
+  const lineTransform = transformBox(
+    cur.position,
+    props.extremumSpace.fromValueSpace(curValue),
+    posInUnitSpace - cur.position,
+    heightInExtremumSpace,
+  )
+
+  const type = props.which === 'h1' ? cur.tangentIn : cur.tangentOut
+  return (
+    <g>
+      <HitZone
+        ref={ref}
+        style={{
+          // @ts-ignore
+          cx: `calc(var(--unitSpaceToScaledSpaceMultiplier) * ${posInUnitSpace} * 1px)`,
+          cy: `calc((var(--graphEditorVerticalSpace) - var(--graphEditorVerticalSpace) * ${valInExtremumSpace}) * 1px)`,
+        }}
+      ></HitZone>
+      <Circle
+        style={{
+          // @ts-ignore
+          cx: `calc(var(--unitSpaceToScaledSpaceMultiplier) * ${posInUnitSpace} * 1px)`,
+          cy: `calc((var(--graphEditorVerticalSpace) - var(--graphEditorVerticalSpace) * ${valInExtremumSpace}) * 1px)`,
+        }}
+        type={type}
+      ></Circle>
+      <Line
+        d="M 0 0 L 1 1"
+        style={{
+          transform: lineTransform,
+        }}
+      />
+      {/*       {contextMenu} */}
+    </g>
+  )
+}
+
+export {CurveHandle2}
+
+function useOurDrags2(node: SVGCircleElement | null, props: IProps2): void {
+  const propsRef = useRef(props)
+  propsRef.current = props
+
+  const handlers = useMemo<Parameters<typeof useDrag>[1]>(() => {
+    return {
+      debugName: 'CurveHandler/useOurDrags',
+      lockCSSCursorTo: 'move',
+      onDragStart() {
+        let tempTransaction: CommitOrDiscard | undefined
+
+        const propsAtStartOfDrag = propsRef.current
+
+        const scaledToUnitSpace = val(
+          propsAtStartOfDrag.layoutP.scaledSpace.toUnitSpace,
+        )
+        const verticalToExtremumSpace = val(
+          propsAtStartOfDrag.layoutP.graphEditorVerticalSpace.toExtremumSpace,
+        )
+
+        const unlockExtremums = propsAtStartOfDrag.extremumSpace.lock()
+
+        return {
+          onDrag(dxInScaledSpace, dy) {
+            if (tempTransaction) {
+              tempTransaction.discard()
+              tempTransaction = undefined
+            }
+
+            const {index, trackData} = propsAtStartOfDrag
+            const cur = trackData.keyframes[index]
+
+            const dPosInUnitSpace = scaledToUnitSpace(dxInScaledSpace)
+
+            const dyInVerticalSpace = -dy
+            const dYInExtremumSpace = verticalToExtremumSpace(dyInVerticalSpace)
+
+            const dYInValueSpace =
+              propsAtStartOfDrag.extremumSpace.deltaToValueSpace(
+                dYInExtremumSpace,
+              )
+
+            const tangents = [
+              cur.tangents[0],
+              cur.tangents[1],
+              cur.tangents[2],
+              cur.tangents[3],
+            ] as [number, number, number, number]
+
+            const offset = props.which === 'h1' ? 0 : 2
+
+            tangents[offset] = tangents[offset] + dPosInUnitSpace
+            tangents[offset + 1] = tangents[offset + 1] + dYInValueSpace
+
+            tempTransaction = getStudio()!.tempTransaction(({stateEditors}) => {
+              stateEditors.coreByProject.historic.sheetsById.sequence.updateTangent(
+                {
+                  ...propsAtStartOfDrag.sheetObject.address,
+                  snappingFunction: (a) => a,
+                  trackId: propsAtStartOfDrag.trackId,
+                  keyFrameIndex: index,
+                  tangent: props.which === 'h1' ? 'left' : 'right',
+                  position: [tangents[offset], tangents[offset + 1]],
+                },
+              )
+            })
           },
           onDragEnd(dragHappened) {
             unlockExtremums()
